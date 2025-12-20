@@ -121,8 +121,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ---------------- BOARD UI ----------------
-
-
+    
     private fun createBoardUI() {
         chessBoardView.post {
             chessBoardView.removeAllViews()
