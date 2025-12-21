@@ -144,7 +144,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
     
     private fun getCellColor(r: Int, c: Int): Int =
         if ((r + c) % 2 == 0)
