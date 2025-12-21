@@ -144,8 +144,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
-
+    
     private fun getCellColor(r: Int, c: Int): Int =
         if ((r + c) % 2 == 0)
             resources.getColor(R.color.gray, theme)
