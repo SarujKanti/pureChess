@@ -144,7 +144,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    
+
     private fun getCellColor(r: Int, c: Int): Int =
         if ((r + c) % 2 == 0)
             resources.getColor(R.color.gray, theme)
@@ -153,6 +153,7 @@ class MainActivity : AppCompatActivity() {
 
     // ---------------- GAME FLOW ----------------
 
+    
     private fun startNewGame() {
         chessBoard.clear()
         gameState.resetTurn()   // ✅ SAME AS old currentTurn = true
