@@ -1,7 +1,12 @@
 package com.skd.mychess.model
 
 enum class PieceType {
-    PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING
+    PAWN,
+    ROOK,
+    KNIGHT,
+    BISHOP,
+    QUEEN,
+    KING
 }
 
 data class ChessPiece(
