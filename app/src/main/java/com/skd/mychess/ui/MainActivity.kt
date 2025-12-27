@@ -152,10 +152,10 @@ class MainActivity : AppCompatActivity() {
             resources.getColor(R.color.wooden_light, theme)
 
     // ---------------- GAME FLOW ----------------
-    
+
     private fun startNewGame() {
         chessBoard.clear()
-        gameState.resetTurn()   // ✅ SAME AS old currentTurn = true
+        gameState.resetTurn()   
         selectedPosition = null
         placeInitialPieces()
         refreshBoard()
