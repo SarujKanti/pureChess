@@ -152,7 +152,6 @@ class MainActivity : AppCompatActivity() {
             resources.getColor(R.color.wooden_light, theme)
 
     // ---------------- GAME FLOW ----------------
-
     
     private fun startNewGame() {
         chessBoard.clear()
