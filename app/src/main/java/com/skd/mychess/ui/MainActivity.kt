@@ -153,6 +153,7 @@ class MainActivity : AppCompatActivity() {
 
     // ---------------- GAME FLOW ----------------
 
+
     
     private fun startNewGame() {
         chessBoard.clear()
