@@ -12,4 +12,6 @@
     <color name="transparent">#00FFFFFF</color>
     <color name="color_yellow_dark">#CDDC39</color>
     <color name="blue">#296CBF</color>
+    <color name="purple">#B749BF</color>
+    <color name="red">#CA132E</color>
 </resources>
