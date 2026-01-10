@@ -160,7 +160,6 @@ class MainActivity : AppCompatActivity() {
         selectedPosition = null
 
         placeInitialPieces()
-        
         refreshBoard()
         updateTurnUI()
     }
