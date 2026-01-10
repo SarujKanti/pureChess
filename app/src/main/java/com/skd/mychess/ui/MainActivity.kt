@@ -156,7 +156,6 @@ class MainActivity : AppCompatActivity() {
     private fun startNewGame() {
         chessBoard.clear()
         gameState.resetTurn()
-
         selectedPosition = null
         placeInitialPieces()
         refreshBoard()
