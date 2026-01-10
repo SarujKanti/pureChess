@@ -158,6 +158,7 @@ class MainActivity : AppCompatActivity() {
         gameState.resetTurn()
 
         selectedPosition = null
+        
         placeInitialPieces()
         refreshBoard()
         updateTurnUI()
