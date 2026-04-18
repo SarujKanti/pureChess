@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.skd.mychess.R
 import com.skd.mychess.model.GameMode
@@ -58,15 +59,13 @@ class HomeActivity : AppCompatActivity() {
 
     private fun setupButtons() {
         findViewById<Button>(R.id.btnNewComputer).setOnClickListener {
-            storage.clearGame(GameMode.COMPUTER)
-            launchGame(GameMode.COMPUTER, resume = false)
+            showColorDialog(GameMode.COMPUTER)
         }
         findViewById<Button>(R.id.btnResumeComputer).setOnClickListener {
             launchGame(GameMode.COMPUTER, resume = true)
         }
         findViewById<Button>(R.id.btnNewFriend).setOnClickListener {
-            storage.clearGame(GameMode.FRIEND)
-            launchGame(GameMode.FRIEND, resume = false)
+            showColorDialog(GameMode.FRIEND)
         }
         findViewById<Button>(R.id.btnResumeFriend).setOnClickListener {
             launchGame(GameMode.FRIEND, resume = true)
@@ -74,6 +73,16 @@ class HomeActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnOnline).setOnClickListener {
             startActivity(Intent(this, OnlineActivity::class.java))
         }
+    }
+
+    private fun showColorDialog(mode: GameMode) {
+        AlertDialog.Builder(this)
+            .setTitle("Choose Your Color")
+            .setItems(arrayOf("White  \u2654", "Black  \u265A")) { _, which ->
+                storage.clearGame(mode)
+                launchGame(mode, resume = false, playerIsWhite = (which == 0))
+            }
+            .show()
     }
 
     private fun updateResumeButtons() {
@@ -85,11 +94,12 @@ class HomeActivity : AppCompatActivity() {
         resumeFriend.alpha = if (resumeFriend.isEnabled) 1f else 0.4f
     }
 
-    private fun launchGame(mode: GameMode, resume: Boolean) {
+    private fun launchGame(mode: GameMode, resume: Boolean, playerIsWhite: Boolean = true) {
         val intent = Intent(this, GameActivity::class.java).apply {
             putExtra(GameActivity.EXTRA_MODE, mode.name)
             putExtra(GameActivity.EXTRA_DIFFICULTY, selectedDifficulty)
             putExtra(GameActivity.EXTRA_RESUME, resume)
+            putExtra(GameActivity.EXTRA_PLAYER_WHITE, playerIsWhite)
         }
         startActivity(intent)
     }
