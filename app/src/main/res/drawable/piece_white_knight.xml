@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- Horse head silhouette (facing right) -->
+    <path
+        android:fillColor="#EDE4CF"
+        android:strokeColor="#5C3A18"
+        android:strokeWidth="3.5"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round"
+        android:pathData="M30,82 C28,68,28,54,32,42 C34,32,40,24,48,18 C50,14,56,12,62,14 C68,16,70,24,68,32 C66,38,60,42,54,44 C50,46,48,52,50,58 C52,64,54,72,54,82 Z" />
+    <!-- Ear -->
+    <path
+        android:fillColor="#EDE4CF"
+        android:strokeColor="#5C3A18"
+        android:strokeWidth="3"
+        android:strokeLineJoin="round"
+        android:pathData="M60,14 L66,6 L72,16 Z" />
+    <!-- Nose bump -->
+    <path
+        android:fillColor="#EDE4CF"
+        android:strokeColor="#5C3A18"
+        android:strokeWidth="2.5"
+        android:strokeLineJoin="round"
+        android:pathData="M62,28 C66,26,70,28,70,32 C70,36,66,38,62,36 Z" />
+    <!-- Base step 1 -->
+    <path
+        android:fillColor="#EDE4CF"
+        android:strokeColor="#5C3A18"
+        android:strokeWidth="3.5"
+        android:strokeLineJoin="round"
+        android:pathData="M18,82 L82,82 L82,90 L18,90 Z" />
+    <!-- Base step 2 (foot) -->
+    <path
+        android:fillColor="#EDE4CF"
+        android:strokeColor="#5C3A18"
+        android:strokeWidth="3.5"
+        android:strokeLineJoin="round"
+        android:pathData="M12,90 L88,90 L88,100 Q88,100,86,100 L14,100 Q12,100,12,100 Z" />
+</vector>
