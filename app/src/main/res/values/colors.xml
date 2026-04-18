@@ -1,17 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Base -->
     <color name="black">#FF000000</color>
-    <color name="gray">#4B4747</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="wooden">#8B4513 </color>
-    <color name="wooden_light">#D7B899 </color>
-    <color name="button_color">#FF6200EE</color>
-    <color name="color_tandc">#0894F9</color>
-    <color name="button_text_color">#FFFFFF</color>
+
+    <!-- App background - deep dark navy -->
+    <color name="bg_dark">#0D1117</color>
+    <color name="bg_surface">#161B27</color>
+    <color name="bg_card">#1E2538</color>
+    <color name="bg_card_elevated">#252D42</color>
+
+    <!-- Board squares -->
+    <color name="board_light">#F0D9B5</color>
+    <color name="board_dark">#B58863</color>
+    <color name="board_border">#8B6914</color>
+
+    <!-- Highlights -->
+    <color name="highlight_move">#6ECC7280</color>
+    <color name="highlight_selected">#6E5B9BD4</color>
+    <color name="highlight_check">#CCE74C3C</color>
+    <color name="highlight_move_dot">#9944AA44</color>
+
+    <!-- Gold accent -->
+    <color name="gold">#D4AF37</color>
+    <color name="gold_light">#F0CC55</color>
+    <color name="gold_dark">#A07820</color>
+
+    <!-- Text -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B8D0</color>
+    <color name="text_muted">#606880</color>
+
+    <!-- Player colors -->
+    <color name="player_white_active">#FFFFFF</color>
+    <color name="player_black_active">#B0B8D0</color>
+    <color name="turn_white">#F0D9B5</color>
+    <color name="turn_black">#B58863</color>
+
+    <!-- Status -->
+    <color name="check_red">#E74C3C</color>
+    <color name="win_green">#2ECC71</color>
+
+    <!-- Legacy kept for compatibility -->
+    <color name="gray">#4B4747</color>
+    <color name="wooden_light">#D7B899</color>
     <color name="move_highlight">#44D24B</color>
-    <color name="transparent">#00FFFFFF</color>
     <color name="color_yellow_dark">#CDDC39</color>
+    <color name="transparent">#00FFFFFF</color>
     <color name="blue">#296CBF</color>
     <color name="purple">#B749BF</color>
     <color name="red">#CA132E</color>
+    <color name="button_color">#FF6200EE</color>
+    <color name="button_text_color">#FFFFFF</color>
+    <color name="color_tandc">#0894F9</color>
+    <color name="wooden">#8B4513</color>
 </resources>
