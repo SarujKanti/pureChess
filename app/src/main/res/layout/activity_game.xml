@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/bg_dark">
 
-    <!-- ── Top bar ─────────────────────────────── -->
+    <!-- ── Top bar ───────────────────────────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/topBar"
         android:layout_width="0dp"
@@ -53,7 +53,7 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- ── Status (check / thinking) ─────────────────────────────── -->
+    <!-- ── Status (check / thinking) ──────────────────────────────────── -->
     <TextView
         android:id="@+id/txtStatus"
         android:layout_width="wrap_content"
@@ -67,7 +67,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- ── Top player card (Black / Opponent) ─────────────────────────────── -->
+    <!-- ── Top player card ─────────────────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/topPlayerCard"
         android:layout_width="0dp"
@@ -82,7 +82,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Turn indicator dot (left) -->
         <View
             android:id="@+id/dotTopTurn"
             android:layout_width="8dp"
@@ -91,14 +90,13 @@
             android:background="#D4AF37"
             android:visibility="invisible" />
 
-        <!-- King icon -->
         <TextView
             android:id="@+id/imgTopPlayer"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:gravity="center"
             android:text="♚"
-            android:textSize="24sp"
+            android:textSize="22sp"
             android:textColor="@color/text_primary" />
 
         <LinearLayout
@@ -124,8 +122,7 @@
                 android:layout_marginTop="1dp"
                 android:text=""
                 android:textColor="@color/text_secondary"
-                android:textSize="10sp"
-                android:letterSpacing="0.05" />
+                android:textSize="10sp" />
         </LinearLayout>
 
         <TextView
@@ -140,125 +137,88 @@
             android:visibility="invisible" />
     </LinearLayout>
 
-    <!-- ── Board with rank/file labels ─────────────────────────────── -->
+    <!-- ── Rank labels (left of board, aligned to boardContainer) ──────── -->
     <LinearLayout
-        android:id="@+id/boardArea"
-        android:layout_width="0dp"
+        android:id="@+id/rankLabels"
+        android:layout_width="18dp"
         android:layout_height="0dp"
         android:orientation="vertical"
-        android:layout_marginHorizontal="8dp"
-        app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintWidth_percent="0.97"
-        app:layout_constraintTop_toBottomOf="@id/topPlayerCard"
-        app:layout_constraintBottom_toTopOf="@id/bottomPlayerCard"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.5">
+        android:layout_marginStart="6dp"
+        app:layout_constraintTop_toTopOf="@id/boardContainer"
+        app:layout_constraintBottom_toBottomOf="@id/boardContainer"
+        app:layout_constraintStart_toStartOf="parent">
 
-        <!-- Rank labels row (top: just a spacer to align with board) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal">
-
-            <!-- Top-left corner spacer -->
-            <View android:layout_width="16dp" android:layout_height="match_parent" />
-
-            <!-- File labels a–h -->
-            <LinearLayout
-                android:id="@+id/fileLabels"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="horizontal">
-
-                <TextView android:layout_width="0dp" android:layout_height="match_parent"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="a" android:textColor="#88B0B8D0" android:textSize="9sp" />
-                <TextView android:layout_width="0dp" android:layout_height="match_parent"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="b" android:textColor="#88B0B8D0" android:textSize="9sp" />
-                <TextView android:layout_width="0dp" android:layout_height="match_parent"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="c" android:textColor="#88B0B8D0" android:textSize="9sp" />
-                <TextView android:layout_width="0dp" android:layout_height="match_parent"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="d" android:textColor="#88B0B8D0" android:textSize="9sp" />
-                <TextView android:layout_width="0dp" android:layout_height="match_parent"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="e" android:textColor="#88B0B8D0" android:textSize="9sp" />
-                <TextView android:layout_width="0dp" android:layout_height="match_parent"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="f" android:textColor="#88B0B8D0" android:textSize="9sp" />
-                <TextView android:layout_width="0dp" android:layout_height="match_parent"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="g" android:textColor="#88B0B8D0" android:textSize="9sp" />
-                <TextView android:layout_width="0dp" android:layout_height="match_parent"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="h" android:textColor="#88B0B8D0" android:textSize="9sp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Board row with rank numbers -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="8"
-            android:orientation="horizontal">
-
-            <!-- Rank labels 8–1 -->
-            <LinearLayout
-                android:id="@+id/rankLabels"
-                android:layout_width="16dp"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
-
-                <TextView android:layout_width="match_parent" android:layout_height="0dp"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="8" android:textColor="#88B0B8D0" android:textSize="9sp" />
-                <TextView android:layout_width="match_parent" android:layout_height="0dp"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="7" android:textColor="#88B0B8D0" android:textSize="9sp" />
-                <TextView android:layout_width="match_parent" android:layout_height="0dp"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="6" android:textColor="#88B0B8D0" android:textSize="9sp" />
-                <TextView android:layout_width="match_parent" android:layout_height="0dp"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="5" android:textColor="#88B0B8D0" android:textSize="9sp" />
-                <TextView android:layout_width="match_parent" android:layout_height="0dp"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="4" android:textColor="#88B0B8D0" android:textSize="9sp" />
-                <TextView android:layout_width="match_parent" android:layout_height="0dp"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="3" android:textColor="#88B0B8D0" android:textSize="9sp" />
-                <TextView android:layout_width="match_parent" android:layout_height="0dp"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="2" android:textColor="#88B0B8D0" android:textSize="9sp" />
-                <TextView android:layout_width="match_parent" android:layout_height="0dp"
-                    android:layout_weight="1" android:gravity="center"
-                    android:text="1" android:textColor="#88B0B8D0" android:textSize="9sp" />
-            </LinearLayout>
-
-            <!-- Chess board (bordered) -->
-            <FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@drawable/bg_board_border"
-                android:padding="3dp">
-
-                <GridLayout
-                    android:id="@+id/chessBoard"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:columnCount="8"
-                    android:rowCount="8" />
-            </FrameLayout>
-        </LinearLayout>
+        <TextView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:gravity="center" android:text="8" android:textColor="#66B0B8D0" android:textSize="9sp" />
+        <TextView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:gravity="center" android:text="7" android:textColor="#66B0B8D0" android:textSize="9sp" />
+        <TextView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:gravity="center" android:text="6" android:textColor="#66B0B8D0" android:textSize="9sp" />
+        <TextView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:gravity="center" android:text="5" android:textColor="#66B0B8D0" android:textSize="9sp" />
+        <TextView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:gravity="center" android:text="4" android:textColor="#66B0B8D0" android:textSize="9sp" />
+        <TextView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:gravity="center" android:text="3" android:textColor="#66B0B8D0" android:textSize="9sp" />
+        <TextView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:gravity="center" android:text="2" android:textColor="#66B0B8D0" android:textSize="9sp" />
+        <TextView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:gravity="center" android:text="1" android:textColor="#66B0B8D0" android:textSize="9sp" />
     </LinearLayout>
 
-    <!-- ── Bottom player card (White / You) ─────────────────────────────── -->
+    <!-- ── Board container (truly square, between player cards) ─────────── -->
+    <FrameLayout
+        android:id="@+id/boardContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_board_border"
+        android:padding="3dp"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintTop_toBottomOf="@id/topPlayerCard"
+        app:layout_constraintBottom_toTopOf="@id/fileLabels"
+        app:layout_constraintStart_toEndOf="@id/rankLabels"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.5"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintWidth_max="450dp">
+
+        <GridLayout
+            android:id="@+id/chessBoard"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:columnCount="8"
+            android:rowCount="8" />
+    </FrameLayout>
+
+    <!-- ── File labels (below board) ───────────────────────────────────── -->
+    <LinearLayout
+        android:id="@+id/fileLabels"
+        android:layout_width="0dp"
+        android:layout_height="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@id/bottomPlayerCard"
+        app:layout_constraintStart_toEndOf="@id/rankLabels"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:gravity="center" android:text="a" android:textColor="#66B0B8D0" android:textSize="9sp" />
+        <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:gravity="center" android:text="b" android:textColor="#66B0B8D0" android:textSize="9sp" />
+        <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:gravity="center" android:text="c" android:textColor="#66B0B8D0" android:textSize="9sp" />
+        <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:gravity="center" android:text="d" android:textColor="#66B0B8D0" android:textSize="9sp" />
+        <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:gravity="center" android:text="e" android:textColor="#66B0B8D0" android:textSize="9sp" />
+        <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:gravity="center" android:text="f" android:textColor="#66B0B8D0" android:textSize="9sp" />
+        <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:gravity="center" android:text="g" android:textColor="#66B0B8D0" android:textSize="9sp" />
+        <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:gravity="center" android:text="h" android:textColor="#66B0B8D0" android:textSize="9sp" />
+    </LinearLayout>
+
+    <!-- ── Bottom player card ──────────────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/bottomPlayerCard"
         android:layout_width="0dp"
@@ -273,7 +233,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Turn indicator dot (left) -->
         <View
             android:id="@+id/dotBottomTurn"
             android:layout_width="8dp"
@@ -282,14 +241,13 @@
             android:background="#D4AF37"
             android:visibility="invisible" />
 
-        <!-- King icon -->
         <TextView
             android:id="@+id/imgBottomPlayer"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:gravity="center"
             android:text="♔"
-            android:textSize="24sp"
+            android:textSize="22sp"
             android:textColor="@color/text_primary" />
 
         <LinearLayout
@@ -315,8 +273,7 @@
                 android:layout_marginTop="1dp"
                 android:text=""
                 android:textColor="@color/text_secondary"
-                android:textSize="10sp"
-                android:letterSpacing="0.05" />
+                android:textSize="10sp" />
         </LinearLayout>
 
         <TextView

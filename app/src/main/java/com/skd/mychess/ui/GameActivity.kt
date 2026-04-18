@@ -22,9 +22,10 @@ import kotlinx.coroutines.withContext
 class GameActivity : AppCompatActivity() {
 
     companion object {
-        const val EXTRA_MODE       = "game_mode"
-        const val EXTRA_DIFFICULTY = "difficulty"
-        const val EXTRA_RESUME     = "resume"
+        const val EXTRA_MODE         = "game_mode"
+        const val EXTRA_DIFFICULTY   = "difficulty"
+        const val EXTRA_RESUME       = "resume"
+        const val EXTRA_PLAYER_WHITE = "player_is_white"
 
         // Board square colours
         private val COLOR_LIGHT    = Color.parseColor("#F0D9B5")
@@ -45,7 +46,7 @@ class GameActivity : AppCompatActivity() {
     // Mode
     private lateinit var mode: GameMode
     private var difficulty     = 5
-    private val playerIsWhite  = true
+    private var playerIsWhite  = true
     private var computerThinking = false
 
     // UI
@@ -82,9 +83,10 @@ class GameActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game)
 
-        mode       = GameMode.valueOf(intent.getStringExtra(EXTRA_MODE) ?: GameMode.FRIEND.name)
-        difficulty = intent.getIntExtra(EXTRA_DIFFICULTY, 5)
-        val resume = intent.getBooleanExtra(EXTRA_RESUME, false)
+        mode          = GameMode.valueOf(intent.getStringExtra(EXTRA_MODE) ?: GameMode.FRIEND.name)
+        difficulty    = intent.getIntExtra(EXTRA_DIFFICULTY, 5)
+        val resume    = intent.getBooleanExtra(EXTRA_RESUME, false)
+        playerIsWhite = intent.getBooleanExtra(EXTRA_PLAYER_WHITE, true)
 
         storage   = LocalGameStorage(this)
         validator = MoveValidator(board)
@@ -94,8 +96,10 @@ class GameActivity : AppCompatActivity() {
         bindViews()
         setupTopBar()
 
-        if (resume && storage.hasSavedGame(mode)) loadGame()
-        else startNewGame()
+        if (resume && storage.hasSavedGame(mode)) {
+            playerIsWhite = storage.loadPlayerColor(mode)
+            loadGame()
+        } else startNewGame()
     }
 
     override fun onPause() {
@@ -131,24 +135,38 @@ class GameActivity : AppCompatActivity() {
 
         when (mode) {
             GameMode.COMPUTER -> {
-                txtModeLabel.text   = "vs Scottfish"
-                txtTopName.text     = "Scottfish AI"
-                txtBottomName.text  = "You"
-                imgTopPlayer.text   = "🤖"
-                imgBottomPlayer.text= "♔"
+                txtModeLabel.text = "vs Scottfish"
                 txtDiffBadge.visibility = View.VISIBLE
-                txtDiffBadge.text   = "Lvl $difficulty"
+                txtDiffBadge.text = "Lvl $difficulty"
+                if (playerIsWhite) {
+                    txtTopName.text      = "Scottfish AI"
+                    txtBottomName.text   = "You"
+                    imgTopPlayer.text    = "🤖"
+                    imgBottomPlayer.text = "♔"
+                } else {
+                    txtTopName.text      = "You"
+                    txtBottomName.text   = "Scottfish AI"
+                    imgTopPlayer.text    = "♚"
+                    imgBottomPlayer.text = "🤖"
+                }
             }
             GameMode.FRIEND -> {
-                txtModeLabel.text   = "vs Friend"
-                txtTopName.text     = "Black"
-                txtBottomName.text  = "White"
-                imgTopPlayer.text   = "♚"
-                imgBottomPlayer.text= "♔"
+                txtModeLabel.text = "vs Friend"
                 txtDiffBadge.visibility = View.GONE
+                if (playerIsWhite) {
+                    txtTopName.text      = "Black"
+                    txtBottomName.text   = "White"
+                    imgTopPlayer.text    = "♚"
+                    imgBottomPlayer.text = "♔"
+                } else {
+                    txtTopName.text      = "White"
+                    txtBottomName.text   = "Black"
+                    imgTopPlayer.text    = "♔"
+                    imgBottomPlayer.text = "♚"
+                }
             }
             GameMode.ONLINE -> {
-                txtModeLabel.text   = "Online"
+                txtModeLabel.text = "Online"
                 txtDiffBadge.visibility = View.GONE
             }
         }
@@ -163,12 +181,15 @@ class GameActivity : AppCompatActivity() {
         capturedByWhite.clear()
         capturedByBlack.clear()
         placeInitialPieces()
-        chessBoard.post { createBoardUI() }
+        chessBoard.post {
+            createBoardUI()
+            if (mode == GameMode.COMPUTER && !playerIsWhite) triggerComputerMove()
+        }
     }
 
     private fun createBoardUI() {
         chessBoard.removeAllViews()
-        val size = chessBoard.width / 8
+        val size = minOf(chessBoard.width, chessBoard.height) / 8
 
         for (r in 0 until 8) {
             for (c in 0 until 8) {
@@ -279,7 +300,10 @@ class GameActivity : AppCompatActivity() {
 
             val piece    = board.getPiece(move.from) ?: return@launch
             val captured = board.getPiece(move.to)
-            if (captured != null) capturedByBlack.add(captured.type)
+            if (captured != null) {
+                if (playerIsWhite) capturedByBlack.add(captured.type)
+                else               capturedByWhite.add(captured.type)
+            }
 
             val finalPiece = if (move.promoteTo != null)
                 ChessPiece(move.promoteTo, piece.isWhite, getImage(move.promoteTo, piece.isWhite))
@@ -440,7 +464,7 @@ class GameActivity : AppCompatActivity() {
         val data = board.allPieces().entries.joinToString(";") {
             "${it.key.row},${it.key.col},${it.value.type},${it.value.isWhite}"
         }
-        storage.saveGame(mode, gameState.whiteTurn, data, difficulty)
+        storage.saveGame(mode, gameState.whiteTurn, data, difficulty, playerIsWhite)
     }
 
     private fun loadGame() {
