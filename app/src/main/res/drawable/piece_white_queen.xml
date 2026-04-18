@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- 5 crown balls: far-left, mid-left, center, mid-right, far-right -->
+    <path
+        android:fillColor="#EDE4CF"
+        android:strokeColor="#5C3A18"
+        android:strokeWidth="3"
+        android:pathData="M14,10 A6,6,0,1,0,26,10 A6,6,0,1,0,14,10 Z" />
+    <path
+        android:fillColor="#EDE4CF"
+        android:strokeColor="#5C3A18"
+        android:strokeWidth="3"
+        android:pathData="M29,16 A5,5,0,1,0,39,16 A5,5,0,1,0,29,16 Z" />
+    <path
+        android:fillColor="#EDE4CF"
+        android:strokeColor="#5C3A18"
+        android:strokeWidth="3"
+        android:pathData="M44,6 A6,6,0,1,0,56,6 A6,6,0,1,0,44,6 Z" />
+    <path
+        android:fillColor="#EDE4CF"
+        android:strokeColor="#5C3A18"
+        android:strokeWidth="3"
+        android:pathData="M61,16 A5,5,0,1,0,71,16 A5,5,0,1,0,61,16 Z" />
+    <path
+        android:fillColor="#EDE4CF"
+        android:strokeColor="#5C3A18"
+        android:strokeWidth="3"
+        android:pathData="M74,10 A6,6,0,1,0,86,10 A6,6,0,1,0,74,10 Z" />
+    <!-- Crown body (connects balls to body) -->
+    <path
+        android:fillColor="#EDE4CF"
+        android:strokeColor="#5C3A18"
+        android:strokeWidth="3.5"
+        android:strokeLineJoin="round"
+        android:pathData="M20,16 L14,38 L86,38 L80,16 L71,28 L66,16 L56,32 L50,12 L44,32 L34,16 L29,28 Z" />
+    <!-- Body -->
+    <path
+        android:fillColor="#EDE4CF"
+        android:strokeColor="#5C3A18"
+        android:strokeWidth="3.5"
+        android:strokeLineJoin="round"
+        android:pathData="M16,38 L84,38 L80,68 L20,68 Z" />
+    <!-- Base step 1 -->
+    <path
+        android:fillColor="#EDE4CF"
+        android:strokeColor="#5C3A18"
+        android:strokeWidth="3.5"
+        android:strokeLineJoin="round"
+        android:pathData="M14,68 L86,68 L86,76 L14,76 Z" />
+    <!-- Base step 2 (foot) -->
+    <path
+        android:fillColor="#EDE4CF"
+        android:strokeColor="#5C3A18"
+        android:strokeWidth="3.5"
+        android:strokeLineJoin="round"
+        android:pathData="M8,76 L92,76 L92,88 Q92,90,90,90 L10,90 Q8,90,8,88 Z" />
+</vector>

@@ -3,7 +3,6 @@ package com.skd.mychess.ui
 import android.app.Dialog
 import android.graphics.Color
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
@@ -23,69 +22,80 @@ import kotlinx.coroutines.withContext
 class GameActivity : AppCompatActivity() {
 
     companion object {
-        const val EXTRA_MODE = "game_mode"
+        const val EXTRA_MODE       = "game_mode"
         const val EXTRA_DIFFICULTY = "difficulty"
-        const val EXTRA_RESUME = "resume"
+        const val EXTRA_RESUME     = "resume"
+
+        // Board square colours
+        private val COLOR_LIGHT    = Color.parseColor("#F0D9B5")
+        private val COLOR_DARK     = Color.parseColor("#B58863")
+        private val COLOR_SELECTED = Color.parseColor("#C8D4AF37") // gold ~78% alpha (ARGB)
+        private val COLOR_MOVE     = Color.parseColor("#9944BB44") // green ~60%
+        private val COLOR_CAPTURE  = Color.parseColor("#99CC4444") // red-green ~60%
+        private val COLOR_CHECK    = Color.parseColor("#CCFF3A3A") // red ~80%
     }
 
     // Engine
-    private val board = ChessBoard()
+    private val board       = ChessBoard()
     private lateinit var validator: MoveValidator
     private lateinit var generator: MoveGenerator
-    private lateinit var ai: ScottfishEngine
-    private val gameState = GameStateManager()
+    private lateinit var ai:        ScottfishEngine
+    private val gameState   = GameStateManager()
 
     // Mode
     private lateinit var mode: GameMode
-    private var difficulty = 5
-    private var playerIsWhite = true  // human always plays white vs computer
+    private var difficulty     = 5
+    private val playerIsWhite  = true
     private var computerThinking = false
 
     // UI
-    private lateinit var chessBoard: GridLayout
+    private lateinit var chessBoard:        GridLayout
     private val cells = Array(8) { Array<ImageView?>(8) { null } }
     private var selectedPos: Position? = null
 
-    private lateinit var topPlayerCard: LinearLayout
-    private lateinit var bottomPlayerCard: LinearLayout
-    private lateinit var txtTopName: TextView
-    private lateinit var txtBottomName: TextView
-    private lateinit var txtTopCaptured: TextView
+    private lateinit var topPlayerCard:     LinearLayout
+    private lateinit var bottomPlayerCard:  LinearLayout
+    private lateinit var txtTopName:        TextView
+    private lateinit var txtBottomName:     TextView
+    private lateinit var txtTopCaptured:    TextView
     private lateinit var txtBottomCaptured: TextView
-    private lateinit var txtTopTurn: TextView
-    private lateinit var txtBottomTurn: TextView
-    private lateinit var txtStatus: TextView
-    private lateinit var txtDiffBadge: TextView
-    private lateinit var txtModeLabel: TextView
+    private lateinit var dotTopTurn:        View
+    private lateinit var dotBottomTurn:     View
+    private lateinit var txtTopTurnLabel:   TextView
+    private lateinit var txtBottomTurnLabel:TextView
+    private lateinit var txtStatus:         TextView
+    private lateinit var txtDiffBadge:      TextView
+    private lateinit var txtModeLabel:      TextView
+    private lateinit var imgTopPlayer:      TextView
+    private lateinit var imgBottomPlayer:   TextView
 
     // Storage
     private lateinit var storage: LocalGameStorage
 
-    // Captured pieces tracking
+    // Captured pieces
     private val capturedByWhite = mutableListOf<PieceType>()
     private val capturedByBlack = mutableListOf<PieceType>()
+
+    // ─── Lifecycle ──────────────────────────────────────────────────────────
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game)
 
-        mode = GameMode.valueOf(intent.getStringExtra(EXTRA_MODE) ?: GameMode.FRIEND.name)
+        mode       = GameMode.valueOf(intent.getStringExtra(EXTRA_MODE) ?: GameMode.FRIEND.name)
         difficulty = intent.getIntExtra(EXTRA_DIFFICULTY, 5)
         val resume = intent.getBooleanExtra(EXTRA_RESUME, false)
 
-        storage = LocalGameStorage(this)
+        storage   = LocalGameStorage(this)
         validator = MoveValidator(board)
         generator = MoveGenerator(board)
-        ai = ScottfishEngine(board)
+        ai        = ScottfishEngine(board)
 
         bindViews()
         setupTopBar()
 
-        if (resume && storage.hasSavedGame(mode)) {
-            loadGame()
-        } else {
-            startNewGame()
-        }
+        if (resume && storage.hasSavedGame(mode)) loadGame()
+        else startNewGame()
     }
 
     override fun onPause() {
@@ -93,46 +103,58 @@ class GameActivity : AppCompatActivity() {
         if (!computerThinking) saveGame()
     }
 
+    // ─── View binding ────────────────────────────────────────────────────────
+
     private fun bindViews() {
-        chessBoard = findViewById(R.id.chessBoard)
-        topPlayerCard = findViewById(R.id.topPlayerCard)
-        bottomPlayerCard = findViewById(R.id.bottomPlayerCard)
-        txtTopName = findViewById(R.id.txtTopPlayerName)
-        txtBottomName = findViewById(R.id.txtBottomPlayerName)
-        txtTopCaptured = findViewById(R.id.txtTopCaptured)
+        chessBoard        = findViewById(R.id.chessBoard)
+        topPlayerCard     = findViewById(R.id.topPlayerCard)
+        bottomPlayerCard  = findViewById(R.id.bottomPlayerCard)
+        txtTopName        = findViewById(R.id.txtTopPlayerName)
+        txtBottomName     = findViewById(R.id.txtBottomPlayerName)
+        txtTopCaptured    = findViewById(R.id.txtTopCaptured)
         txtBottomCaptured = findViewById(R.id.txtBottomCaptured)
-        txtTopTurn = findViewById(R.id.txtTopTurnIndicator)
-        txtBottomTurn = findViewById(R.id.txtBottomTurnIndicator)
-        txtStatus = findViewById(R.id.txtStatus)
-        txtDiffBadge = findViewById(R.id.txtDifficultyBadge)
-        txtModeLabel = findViewById(R.id.txtModeLabel)
+        dotTopTurn        = findViewById(R.id.dotTopTurn)
+        dotBottomTurn     = findViewById(R.id.dotBottomTurn)
+        txtTopTurnLabel   = findViewById(R.id.txtTopTurnLabel)
+        txtBottomTurnLabel= findViewById(R.id.txtBottomTurnLabel)
+        txtStatus         = findViewById(R.id.txtStatus)
+        txtDiffBadge      = findViewById(R.id.txtDifficultyBadge)
+        txtModeLabel      = findViewById(R.id.txtModeLabel)
+        imgTopPlayer      = findViewById(R.id.imgTopPlayer)
+        imgBottomPlayer   = findViewById(R.id.imgBottomPlayer)
     }
 
+    // ─── Top bar setup ───────────────────────────────────────────────────────
+
     private fun setupTopBar() {
-        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { onBackPressed() }
+        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
         when (mode) {
             GameMode.COMPUTER -> {
-                txtModeLabel.text = "vs Scottfish"
-                txtTopName.text = "Scottfish AI"
-                txtBottomName.text = "You"
+                txtModeLabel.text   = "vs Scottfish"
+                txtTopName.text     = "Scottfish AI"
+                txtBottomName.text  = "You"
+                imgTopPlayer.text   = "🤖"
+                imgBottomPlayer.text= "♔"
                 txtDiffBadge.visibility = View.VISIBLE
-                txtDiffBadge.text = "Lvl $difficulty"
-                findViewById<TextView>(R.id.imgTopPlayer).text = "🤖"
+                txtDiffBadge.text   = "Lvl $difficulty"
             }
             GameMode.FRIEND -> {
-                txtModeLabel.text = "vs Friend"
-                txtTopName.text = "Black"
-                txtBottomName.text = "White"
+                txtModeLabel.text   = "vs Friend"
+                txtTopName.text     = "Black"
+                txtBottomName.text  = "White"
+                imgTopPlayer.text   = "♚"
+                imgBottomPlayer.text= "♔"
                 txtDiffBadge.visibility = View.GONE
-                findViewById<TextView>(R.id.imgTopPlayer).text = "♚"
             }
             GameMode.ONLINE -> {
-                txtModeLabel.text = "Online"
+                txtModeLabel.text   = "Online"
                 txtDiffBadge.visibility = View.GONE
             }
         }
     }
+
+    // ─── Game start / load ───────────────────────────────────────────────────
 
     private fun startNewGame() {
         board.clear()
@@ -152,12 +174,12 @@ class GameActivity : AppCompatActivity() {
             for (c in 0 until 8) {
                 val cell = ImageView(this).apply {
                     layoutParams = GridLayout.LayoutParams().apply {
-                        width = size
+                        width  = size
                         height = size
                     }
-                    setBackgroundColor(cellColor(r, c))
-                    scaleType = ImageView.ScaleType.CENTER_INSIDE
-                    setPadding(2, 2, 2, 2)
+                    setBackgroundColor(squareColor(r, c))
+                    scaleType = ImageView.ScaleType.FIT_CENTER
+                    setPadding(4, 4, 4, 4)
                     tag = Position(r, c)
                     setOnClickListener { if (!computerThinking) onCellClick(it as ImageView) }
                 }
@@ -174,7 +196,7 @@ class GameActivity : AppCompatActivity() {
     private fun onCellClick(cell: ImageView) {
         if (mode == GameMode.COMPUTER && gameState.whiteTurn != playerIsWhite) return
 
-        val pos = cell.tag as Position
+        val pos    = cell.tag as Position
         val tapped = board.getPiece(pos)
 
         if (selectedPos == null) {
@@ -185,9 +207,8 @@ class GameActivity : AppCompatActivity() {
         }
 
         val selPiece = board.getPiece(selectedPos!!)
-
         if (tapped != null && selPiece != null && tapped.isWhite == selPiece.isWhite) {
-            clearHighlights()
+            resetSelection()
             selectedPos = pos
             highlightMoves(pos, tapped)
             return
@@ -195,6 +216,8 @@ class GameActivity : AppCompatActivity() {
 
         attemptMove(selectedPos!!, pos)
     }
+
+    // ─── Move execution ──────────────────────────────────────────────────────
 
     private fun attemptMove(from: Position, to: Position) {
         val piece = board.getPiece(from) ?: run { resetSelection(); return }
@@ -204,38 +227,32 @@ class GameActivity : AppCompatActivity() {
             return
         }
 
-        // Check pawn promotion
         if (piece.type == PieceType.PAWN && (to.row == 0 || to.row == 7)) {
             if (mode == GameMode.COMPUTER && !piece.isWhite) {
-                // Computer auto-promotes to queen
                 executeMove(from, to, PieceType.QUEEN)
             } else {
-                showPromotionDialog(piece.isWhite) { promoteTo ->
-                    executeMove(from, to, promoteTo)
-                }
+                showPromotionDialog(piece.isWhite) { executeMove(from, to, it) }
             }
             return
         }
-
         executeMove(from, to, null)
     }
 
     private fun executeMove(from: Position, to: Position, promoteTo: PieceType?) {
-        val piece = board.getPiece(from) ?: return
+        val piece    = board.getPiece(from) ?: return
         val captured = board.getPiece(to)
 
         if (captured != null) {
             if (piece.isWhite) capturedByWhite.add(captured.type)
-            else capturedByBlack.add(captured.type)
+            else               capturedByBlack.add(captured.type)
         }
 
-        val finalPiece = if (promoteTo != null) {
+        val finalPiece = if (promoteTo != null)
             ChessPiece(promoteTo, piece.isWhite, getImage(promoteTo, piece.isWhite))
-        } else piece
+        else piece
 
         board.setPiece(to, finalPiece)
         board.setPiece(from, null)
-
         resetSelection()
         refreshBoard()
 
@@ -245,10 +262,7 @@ class GameActivity : AppCompatActivity() {
     private fun continueAfterMove() {
         gameState.switchTurn()
         updateTurnUI()
-
-        if (mode == GameMode.COMPUTER && gameState.whiteTurn != playerIsWhite) {
-            triggerComputerMove()
-        }
+        if (mode == GameMode.COMPUTER && gameState.whiteTurn != playerIsWhite) triggerComputerMove()
     }
 
     private fun triggerComputerMove() {
@@ -261,23 +275,20 @@ class GameActivity : AppCompatActivity() {
             }
             computerThinking = false
 
-            if (move == null) {
-                showEndDialog("Draw", "No moves available.") {}
-                return@launch
-            }
+            if (move == null) { showEndDialog("Draw", "No moves available."); return@launch }
 
-            val piece = board.getPiece(move.from) ?: return@launch
+            val piece    = board.getPiece(move.from) ?: return@launch
             val captured = board.getPiece(move.to)
             if (captured != null) capturedByBlack.add(captured.type)
 
-            val finalPiece = if (move.promoteTo != null) {
+            val finalPiece = if (move.promoteTo != null)
                 ChessPiece(move.promoteTo, piece.isWhite, getImage(move.promoteTo, piece.isWhite))
-            } else piece
+            else piece
 
             board.setPiece(move.to, finalPiece)
             board.setPiece(move.from, null)
-
             refreshBoard()
+
             checkGameEnd {
                 gameState.switchTurn()
                 updateTurnUI()
@@ -285,7 +296,7 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
-    // ─── Game-end detection ──────────────────────────────────────────────────
+    // ─── Game-end check ──────────────────────────────────────────────────────
 
     private fun checkGameEnd(onContinue: () -> Unit) {
         val opponent = !gameState.whiteTurn
@@ -293,54 +304,55 @@ class GameActivity : AppCompatActivity() {
             generator.isCheckmate(opponent) -> {
                 val winner = if (gameState.whiteTurn) "White" else "Black"
                 updateTurnUI()
-                showEndDialog("Checkmate!", "$winner wins!") { restartOrExit() }
+                showEndDialog("Checkmate!", "$winner wins!")
             }
-            generator.isStalemate(opponent) -> {
-                showEndDialog("Stalemate", "It's a draw!") { restartOrExit() }
-            }
+            generator.isStalemate(opponent) -> showEndDialog("Stalemate", "It's a draw!")
             else -> onContinue()
         }
     }
 
-    // ─── UI updates ──────────────────────────────────────────────────────────
+    // ─── Turn UI ─────────────────────────────────────────────────────────────
 
     private fun updateTurnUI() {
         val whiteTurn = gameState.whiteTurn
-        val inCheck = generator.isKingInCheck(whiteTurn)
-        val thinking = computerThinking
+        val inCheck   = generator.isKingInCheck(whiteTurn)
+        val thinking  = computerThinking
 
-        // Status text
+        // Status strip
         txtStatus.visibility = if (inCheck || thinking) View.VISIBLE else View.GONE
-        if (thinking) {
-            txtStatus.text = "Scottfish is thinking..."
-            txtStatus.setTextColor(Color.parseColor("#D4AF37"))
-        } else if (inCheck) {
-            txtStatus.text = "${if (whiteTurn) "White" else "Black"} is in CHECK!"
-            txtStatus.setTextColor(Color.parseColor("#E74C3C"))
+        when {
+            thinking -> {
+                txtStatus.text = "Scottfish is thinking…"
+                txtStatus.setTextColor(Color.parseColor("#D4AF37"))
+            }
+            inCheck  -> {
+                txtStatus.text = "${if (whiteTurn) "White" else "Black"} is in CHECK!"
+                txtStatus.setTextColor(Color.parseColor("#E74C3C"))
+            }
         }
 
-        // Player cards: bottom = white, top = black
+        // bottom = white, top = black
         val whiteActive = whiteTurn && !thinking
         val blackActive = !whiteTurn && !thinking
 
         bottomPlayerCard.setBackgroundResource(
-            if (whiteActive) R.drawable.bg_player_card_active else R.drawable.bg_player_card
-        )
+            if (whiteActive) R.drawable.bg_player_card_active else R.drawable.bg_player_card)
         topPlayerCard.setBackgroundResource(
-            if (blackActive) R.drawable.bg_player_card_active else R.drawable.bg_player_card
-        )
-        txtBottomTurn.visibility = if (whiteActive) View.VISIBLE else View.INVISIBLE
-        txtTopTurn.visibility = if (blackActive) View.VISIBLE else View.INVISIBLE
+            if (blackActive) R.drawable.bg_player_card_active else R.drawable.bg_player_card)
 
-        // Captured pieces
+        dotBottomTurn.visibility       = if (whiteActive) View.VISIBLE else View.INVISIBLE
+        dotTopTurn.visibility          = if (blackActive) View.VISIBLE else View.INVISIBLE
+        txtBottomTurnLabel.visibility  = if (whiteActive) View.VISIBLE else View.INVISIBLE
+        txtTopTurnLabel.visibility     = if (blackActive) View.VISIBLE else View.INVISIBLE
+
+        // Captured pieces display
         txtBottomCaptured.text = capturedByWhite.joinToString("") { pieceSymbol(it, true) }
-        txtTopCaptured.text = capturedByBlack.joinToString("") { pieceSymbol(it, false) }
+        txtTopCaptured.text    = capturedByBlack.joinToString("") { pieceSymbol(it, false) }
 
-        // Check highlight on board
         refreshCheckHighlight()
     }
 
-    private fun pieceSymbol(type: PieceType, white: Boolean) = when (type) {
+    private fun pieceSymbol(t: PieceType, white: Boolean) = when (t) {
         PieceType.PAWN   -> if (white) "♙" else "♟"
         PieceType.ROOK   -> if (white) "♖" else "♜"
         PieceType.KNIGHT -> if (white) "♘" else "♞"
@@ -349,54 +361,50 @@ class GameActivity : AppCompatActivity() {
         PieceType.KING   -> if (white) "♔" else "♚"
     }
 
-    private fun refreshCheckHighlight() {
-        for (r in 0..7) for (c in 0..7)
-            cells[r][c]?.setBackgroundColor(cellColor(r, c))
-
-        for (white in listOf(true, false)) {
-            if (generator.isKingInCheck(white)) {
-                val kPos = board.allPieces().entries
-                    .firstOrNull { it.value.type == PieceType.KING && it.value.isWhite == white }
-                    ?.key ?: continue
-                cells[kPos.row][kPos.col]?.setBackgroundResource(R.drawable.bg_cell_highlight_check)
-            }
-        }
-    }
-
     // ─── Board rendering ─────────────────────────────────────────────────────
 
     private fun refreshBoard() {
         for (r in 0..7) for (c in 0..7) {
-            val piece = board.getPiece(Position(r, c))
-            cells[r][c]?.setImageResource(piece?.imageRes ?: 0)
+            cells[r][c]?.setImageResource(board.getPiece(Position(r, c))?.imageRes ?: 0)
         }
     }
 
     private fun highlightMoves(from: Position, piece: ChessPiece) {
-        clearHighlights()
-        cells[from.row][from.col]?.setBackgroundResource(R.drawable.bg_cell_highlight_selected)
+        resetHighlights()
+        // Gold background on selected piece cell
+        cells[from.row][from.col]?.setBackgroundColor(COLOR_SELECTED)
 
         for (r in 0..7) for (c in 0..7) {
             val to = Position(r, c)
-            if (validator.isValidMove(from, to, piece) && generator.isMoveSafe(from, to, piece)) {
-                cells[r][c]?.setBackgroundResource(R.drawable.bg_cell_highlight_move)
-            }
+            if (!validator.isValidMove(from, to, piece) || !generator.isMoveSafe(from, to, piece)) continue
+            val isCapture = board.getPiece(to) != null
+            cells[r][c]?.setBackgroundColor(if (isCapture) COLOR_CAPTURE else COLOR_MOVE)
         }
     }
 
-    private fun clearHighlights() {
+    private fun resetHighlights() {
         for (r in 0..7) for (c in 0..7)
-            cells[r][c]?.setBackgroundColor(cellColor(r, c))
+            cells[r][c]?.setBackgroundColor(squareColor(r, c))
         refreshCheckHighlight()
+    }
+
+    private fun refreshCheckHighlight() {
+        for (white in listOf(true, false)) {
+            if (!generator.isKingInCheck(white)) continue
+            val kPos = board.allPieces().entries
+                .firstOrNull { it.value.type == PieceType.KING && it.value.isWhite == white }
+                ?.key ?: continue
+            cells[kPos.row][kPos.col]?.setBackgroundColor(COLOR_CHECK)
+        }
     }
 
     private fun resetSelection() {
         selectedPos = null
-        clearHighlights()
+        resetHighlights()
     }
 
-    private fun cellColor(r: Int, c: Int) =
-        if ((r + c) % 2 == 0) Color.parseColor("#F0D9B5") else Color.parseColor("#B58863")
+    private fun squareColor(r: Int, c: Int) =
+        if ((r + c) % 2 == 0) COLOR_LIGHT else COLOR_DARK
 
     // ─── Pieces ──────────────────────────────────────────────────────────────
 
@@ -417,12 +425,12 @@ class GameActivity : AppCompatActivity() {
     private fun makePiece(t: PieceType, white: Boolean) = ChessPiece(t, white, getImage(t, white))
 
     private fun getImage(t: PieceType, white: Boolean) = when (t) {
-        PieceType.PAWN   -> if (white) R.drawable.white_pawn   else R.drawable.black_pawn
-        PieceType.ROOK   -> if (white) R.drawable.white_rook   else R.drawable.black_rook
-        PieceType.KNIGHT -> if (white) R.drawable.white_knight else R.drawable.black_knight
-        PieceType.BISHOP -> if (white) R.drawable.white_bishop else R.drawable.black_bishop
-        PieceType.QUEEN  -> if (white) R.drawable.white_queen  else R.drawable.black_queen
-        PieceType.KING   -> if (white) R.drawable.white_king   else R.drawable.black_king
+        PieceType.PAWN   -> if (white) R.drawable.piece_white_pawn   else R.drawable.piece_black_pawn
+        PieceType.ROOK   -> if (white) R.drawable.piece_white_rook   else R.drawable.piece_black_rook
+        PieceType.KNIGHT -> if (white) R.drawable.piece_white_knight else R.drawable.piece_black_knight
+        PieceType.BISHOP -> if (white) R.drawable.piece_white_bishop else R.drawable.piece_black_bishop
+        PieceType.QUEEN  -> if (white) R.drawable.piece_white_queen  else R.drawable.piece_black_queen
+        PieceType.KING   -> if (white) R.drawable.piece_white_king   else R.drawable.piece_black_king
     }
 
     // ─── Save / Load ─────────────────────────────────────────────────────────
@@ -447,7 +455,7 @@ class GameActivity : AppCompatActivity() {
             ?.forEach { entry ->
                 val p = entry.split(",")
                 if (p.size == 4) {
-                    val type = PieceType.valueOf(p[2].uppercase())
+                    val type    = PieceType.valueOf(p[2].uppercase())
                     val isWhite = p[3].toBoolean()
                     board.setPiece(Position(p[0].toInt(), p[1].toInt()), makePiece(type, isWhite))
                 }
@@ -464,49 +472,35 @@ class GameActivity : AppCompatActivity() {
         dialog.setCancelable(false)
 
         val types = listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT)
-        val ids = listOf(R.id.btnPromoteQueen, R.id.btnPromoteRook, R.id.btnPromoteBishop, R.id.btnPromoteKnight)
+        val ids   = listOf(R.id.btnPromoteQueen, R.id.btnPromoteRook,
+                           R.id.btnPromoteBishop, R.id.btnPromoteKnight)
 
         types.zip(ids).forEach { (type, id) ->
             dialog.findViewById<ImageView>(id)?.let { view ->
                 view.setImageResource(getImage(type, isWhite))
-                view.setOnClickListener {
-                    dialog.dismiss()
-                    onChoice(type)
-                }
+                view.setOnClickListener { dialog.dismiss(); onChoice(type) }
             }
         }
         dialog.show()
     }
 
-    private fun showEndDialog(title: String, message: String, onDismiss: () -> Unit) {
+    private fun showEndDialog(title: String, message: String) {
         AlertDialog.Builder(this)
             .setTitle(title)
             .setMessage(message)
             .setCancelable(false)
-            .setPositiveButton("New Game") { _, _ ->
-                storage.clearGame(mode)
-                startNewGame()
-            }
-            .setNegativeButton("Exit") { _, _ ->
-                finish()
-            }
+            .setPositiveButton("New Game") { _, _ -> storage.clearGame(mode); startNewGame() }
+            .setNegativeButton("Exit")     { _, _ -> finish() }
             .show()
     }
 
-    private fun restartOrExit() { /* handled inside showEndDialog buttons */ }
-
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         AlertDialog.Builder(this)
             .setTitle("Save & Exit")
             .setMessage("Save this game and return to the menu?")
-            .setPositiveButton("Save & Exit") { _, _ ->
-                saveGame()
-                finish()
-            }
-            .setNegativeButton("Abandon") { _, _ ->
-                storage.clearGame(mode)
-                finish()
-            }
+            .setPositiveButton("Save & Exit")  { _, _ -> saveGame(); finish() }
+            .setNegativeButton("Abandon")      { _, _ -> storage.clearGame(mode); finish() }
             .setNeutralButton("Cancel", null)
             .show()
     }
