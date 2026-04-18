@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <!-- Logo -->
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginTop="32dp"
+            android:src="@drawable/chess_logo"
+            android:contentDescription="PureChess logo" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="PureChess"
+            android:textColor="@color/gold"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="36dp"
+            android:text="Choose your game"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
+
+        <!-- vs Computer card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:gravity="center"
+                    android:text="♟"
+                    android:textSize="28sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="vs Computer"
+                        android:textColor="@color/text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Challenge the Scottfish AI"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Difficulty row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Difficulty"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/txtDifficultyLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="5 — Intermediate"
+                        android:textColor="@color/gold"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <SeekBar
+                    android:id="@+id/seekDifficulty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:max="9"
+                    android:progress="4"
+                    android:progressTint="@color/gold"
+                    android:thumbTint="@color/gold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnResumeComputer"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_button_outline"
+                    android:text="Resume"
+                    android:textColor="@color/gold"
+                    android:textSize="13sp"
+                    android:textAllCaps="false"
+                    android:stateListAnimator="@null" />
+
+                <Button
+                    android:id="@+id/btnNewComputer"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_button_gold"
+                    android:text="New Game"
+                    android:textColor="@color/black"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textAllCaps="false"
+                    android:stateListAnimator="@null" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- vs Friend card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:gravity="center"
+                    android:text="👥"
+                    android:textSize="28sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="vs Friend"
+                        android:textColor="@color/text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Play on the same device"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnResumeFriend"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_button_outline"
+                    android:text="Resume"
+                    android:textColor="@color/gold"
+                    android:textSize="13sp"
+                    android:textAllCaps="false"
+                    android:stateListAnimator="@null" />
+
+                <Button
+                    android:id="@+id/btnNewFriend"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_button_gold"
+                    android:text="New Game"
+                    android:textColor="@color/black"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textAllCaps="false"
+                    android:stateListAnimator="@null" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Online card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:gravity="center"
+                    android:text="🌐"
+                    android:textSize="28sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Play Online"
+                        android:textColor="@color/text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Create or join a room"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnOnline"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_button_gold"
+                android:text="Play Online"
+                android:textColor="@color/black"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                android:stateListAnimator="@null" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
