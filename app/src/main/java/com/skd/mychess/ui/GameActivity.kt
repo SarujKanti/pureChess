@@ -425,12 +425,12 @@ class GameActivity : AppCompatActivity() {
     private fun makePiece(t: PieceType, white: Boolean) = ChessPiece(t, white, getImage(t, white))
 
     private fun getImage(t: PieceType, white: Boolean) = when (t) {
-        PieceType.PAWN   -> if (white) R.drawable.piece_white_pawn   else R.drawable.piece_black_pawn
-        PieceType.ROOK   -> if (white) R.drawable.piece_white_rook   else R.drawable.piece_black_rook
-        PieceType.KNIGHT -> if (white) R.drawable.piece_white_knight else R.drawable.piece_black_knight
-        PieceType.BISHOP -> if (white) R.drawable.piece_white_bishop else R.drawable.piece_black_bishop
-        PieceType.QUEEN  -> if (white) R.drawable.piece_white_queen  else R.drawable.piece_black_queen
-        PieceType.KING   -> if (white) R.drawable.piece_white_king   else R.drawable.piece_black_king
+        PieceType.PAWN   -> if (white) R.drawable.white_pawn   else R.drawable.black_pawn
+        PieceType.ROOK   -> if (white) R.drawable.white_rook   else R.drawable.black_rook
+        PieceType.KNIGHT -> if (white) R.drawable.white_knight else R.drawable.black_knight
+        PieceType.BISHOP -> if (white) R.drawable.white_bishop else R.drawable.black_bishop
+        PieceType.QUEEN  -> if (white) R.drawable.white_queen  else R.drawable.black_queen
+        PieceType.KING   -> if (white) R.drawable.white_king   else R.drawable.black_king
     }
 
     // ─── Save / Load ─────────────────────────────────────────────────────────
