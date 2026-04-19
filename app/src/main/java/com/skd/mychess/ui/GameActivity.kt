@@ -6,7 +6,7 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
-import android.view.Window
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -32,17 +32,20 @@ class GameActivity : AppCompatActivity() {
         const val EXTRA_P1_NAME      = "p1_name"
         const val EXTRA_P2_NAME      = "p2_name"
 
-        // Board square colours
-        private val COLOR_LIGHT    = Color.parseColor("#F0D9B5")
-        private val COLOR_DARK     = Color.parseColor("#B58863")
+        // Board square base colours
+        private val COLOR_LIGHT     = Color.parseColor("#F0D9B5")
+        private val COLOR_DARK      = Color.parseColor("#B58863")
         // Selected square: warm gold tint
-        private val COLOR_SELECTED = Color.parseColor("#BBD4AF37")
+        private val COLOR_SELECTED  = Color.parseColor("#BBD4AF37")
         // King-in-check square
-        private val COLOR_CHECK    = Color.parseColor("#CCFF3A3A")
-        // Move-dot fill (semi-transparent dark circle on empty squares)
-        private val DOT_COLOR      = Color.parseColor("#55000000")
-        // Capture-ring stroke (darker ring around an occupied target square)
-        private val RING_COLOR     = Color.parseColor("#CC000000")
+        private val COLOR_CHECK     = Color.parseColor("#CCFF3A3A")
+        // Move-dot: semi-transparent dark circle on empty squares
+        private val DOT_COLOR       = Color.parseColor("#55000000")
+        // Capture-ring: darker oval stroke around occupied target
+        private val RING_COLOR      = Color.parseColor("#CC000000")
+        // Last-move highlight: chess.com yellow-green tint
+        private val COLOR_LAST_LIGHT = Color.parseColor("#CCF6F644")  // on light squares
+        private val COLOR_LAST_DARK  = Color.parseColor("#CCBACA2B")  // on dark squares
     }
 
     // ─── Engine ──────────────────────────────────────────────────────────────
@@ -62,17 +65,22 @@ class GameActivity : AppCompatActivity() {
     private var p1Name           = "Player 1"
     private var p2Name           = "Player 2"
 
+    // Last move tracking (board coordinates)
+    private var lastMoveFrom:   Position?  = null
+    private var lastMoveTo:     Position?  = null
+    private var lastMovedPiece: PieceType? = null
+
     // ─── UI ──────────────────────────────────────────────────────────────────
-    private lateinit var chessBoard:  GridLayout
-    private lateinit var rankLabels:  LinearLayout
-    private lateinit var fileLabels:  LinearLayout
+    private lateinit var chessBoard: GridLayout
     private var cellSize = 0
 
     /**
-     * cells[visualRow][visualCol] holds the FrameLayout for that screen position.
-     * Child 0 = piece ImageView
-     * Child 1 = move-dot View (small circle, shown for empty move targets)
-     * Child 2 = capture-ring View (full-size oval stroke, shown for capture targets)
+     * cells[visualRow][visualCol] → FrameLayout.
+     *   child 0 = piece ImageView
+     *   child 1 = move-dot View    (small circle, empty targets)
+     *   child 2 = capture-ring View (oval stroke, occupied targets)
+     *   child 3 = rank label TextView (leftmost column only, optional)
+     *   child 3/4 = file label TextView (bottom row only, optional)
      */
     private val cells = Array(8) { Array<FrameLayout?>(8) { null } }
     private var selectedPos: Position? = null   // board-coordinate position
@@ -83,8 +91,8 @@ class GameActivity : AppCompatActivity() {
     private lateinit var txtBottomName:      TextView
     private lateinit var txtTopCaptured:     TextView
     private lateinit var txtBottomCaptured:  TextView
-    private lateinit var dotTopTurn:         android.view.View
-    private lateinit var dotBottomTurn:      android.view.View
+    private lateinit var dotTopTurn:         View
+    private lateinit var dotBottomTurn:      View
     private lateinit var txtTopTurnLabel:    TextView
     private lateinit var txtBottomTurnLabel: TextView
     private lateinit var txtStatus:          TextView
@@ -97,16 +105,14 @@ class GameActivity : AppCompatActivity() {
     private lateinit var storage: LocalGameStorage
 
     // ─── Captured piece lists ─────────────────────────────────────────────────
-    /** Pieces captured by White (White ate these Black pieces). */
     private val capturedByWhite = mutableListOf<PieceType>()
-    /** Pieces captured by Black (Black ate these White pieces). */
     private val capturedByBlack = mutableListOf<PieceType>()
 
     // =========================================================================
     // Coordinate helpers
     // =========================================================================
 
-    /** Board row/col → visual (display) row/col. */
+    /** Board row/col → visual row/col. */
     private fun dRow(br: Int) = if (boardFlipped) 7 - br else br
     private fun dCol(bc: Int) = if (boardFlipped) 7 - bc else bc
 
@@ -156,8 +162,6 @@ class GameActivity : AppCompatActivity() {
 
     private fun bindViews() {
         chessBoard        = findViewById(R.id.chessBoard)
-        rankLabels        = findViewById(R.id.rankLabels)
-        fileLabels        = findViewById(R.id.fileLabels)
         topPlayerCard     = findViewById(R.id.topPlayerCard)
         bottomPlayerCard  = findViewById(R.id.bottomPlayerCard)
         txtTopName        = findViewById(R.id.txtTopPlayerName)
@@ -186,9 +190,8 @@ class GameActivity : AppCompatActivity() {
         when (mode) {
             GameMode.COMPUTER -> {
                 txtModeLabel.text = "vs Scottfish"
-                txtDiffBadge.visibility = android.view.View.VISIBLE
+                txtDiffBadge.visibility = View.VISIBLE
                 txtDiffBadge.text = "Lvl $difficulty"
-                // Player is always at the visual bottom (board flips if player picked black)
                 txtBottomName.text   = "You"
                 txtTopName.text      = "Scottfish AI"
                 imgTopPlayer.text    = "🤖"
@@ -196,8 +199,7 @@ class GameActivity : AppCompatActivity() {
             }
             GameMode.FRIEND -> {
                 txtModeLabel.text = "vs Friend"
-                txtDiffBadge.visibility = android.view.View.GONE
-                // P1 always at bottom (White), P2 always at top (Black)
+                txtDiffBadge.visibility = View.GONE
                 txtBottomName.text   = p1Name
                 txtTopName.text      = p2Name
                 imgBottomPlayer.text = "♔"
@@ -205,7 +207,7 @@ class GameActivity : AppCompatActivity() {
             }
             GameMode.ONLINE -> {
                 txtModeLabel.text = "Online"
-                txtDiffBadge.visibility = android.view.View.GONE
+                txtDiffBadge.visibility = View.GONE
             }
         }
     }
@@ -215,8 +217,10 @@ class GameActivity : AppCompatActivity() {
     // =========================================================================
 
     private fun startNewGame() {
-        // Flip board when player chose Black in vs-Computer mode
-        boardFlipped = (mode == GameMode.COMPUTER && !playerIsWhite)
+        boardFlipped  = (mode == GameMode.COMPUTER && !playerIsWhite)
+        lastMoveFrom  = null
+        lastMoveTo    = null
+        lastMovedPiece = null
         board.clear()
         gameState.resetTurn()
         selectedPos = null
@@ -225,7 +229,6 @@ class GameActivity : AppCompatActivity() {
         placeInitialPieces()
         chessBoard.post {
             createBoardUI()
-            // If player is Black, computer (White) must move first
             if (mode == GameMode.COMPUTER && !playerIsWhite) triggerComputerMove()
         }
     }
@@ -234,63 +237,88 @@ class GameActivity : AppCompatActivity() {
         chessBoard.removeAllViews()
         cellSize = minOf(chessBoard.width, chessBoard.height) / 8
 
-        updateAxisLabels()
-
         for (vr in 0 until 8) {
             for (vc in 0 until 8) {
-                val boardPos = Position(bRow(vr), bCol(vc))
+                val boardPos  = Position(bRow(vr), bCol(vc))
+                val sqColor   = squareColor(vr, vc)
+                // Label colour contrasts with the square
+                val lblColor  = if ((vr + vc) % 2 == 0) COLOR_DARK else COLOR_LIGHT
 
-                // ── Frame ─────────────────────────────────────────────────
+                // ── Frame ──────────────────────────────────────────────────
                 val frame = FrameLayout(this).apply {
                     layoutParams = GridLayout.LayoutParams().apply {
                         width = cellSize; height = cellSize
                     }
-                    setBackgroundColor(squareColor(vr, vc))
+                    setBackgroundColor(sqColor)
                     tag = boardPos
                     setOnClickListener { if (!computerThinking) onCellClick(it as FrameLayout) }
                 }
 
-                // ── Piece ImageView ────────────────────────────────────────
-                val pieceImg = ImageView(this).apply {
+                // ── Child 0: Piece image ────────────────────────────────────
+                frame.addView(ImageView(this).apply {
                     layoutParams = FrameLayout.LayoutParams(
                         FrameLayout.LayoutParams.MATCH_PARENT,
                         FrameLayout.LayoutParams.MATCH_PARENT
                     )
                     scaleType = ImageView.ScaleType.FIT_CENTER
                     setPadding(5, 5, 5, 5)
-                }
+                })
 
-                // ── Move-dot (small filled circle, centered) ───────────────
+                // ── Child 1: Move-dot (small filled circle) ─────────────────
                 val dotSz = cellSize / 3
-                val dotView = android.view.View(this).apply {
+                frame.addView(View(this).apply {
                     layoutParams = FrameLayout.LayoutParams(dotSz, dotSz, Gravity.CENTER)
                     background = GradientDrawable().apply {
                         shape = GradientDrawable.OVAL
                         setColor(DOT_COLOR)
                     }
-                    visibility = android.view.View.GONE
-                }
+                    visibility = View.GONE
+                })
 
-                // ── Capture-ring (full-size oval with stroke only) ─────────
-                val ringView = android.view.View(this).apply {
-                    val margin = dp(4)
+                // ── Child 2: Capture-ring (oval with stroke, no fill) ───────
+                val rm = dp(3)
+                frame.addView(View(this).apply {
                     layoutParams = FrameLayout.LayoutParams(
                         FrameLayout.LayoutParams.MATCH_PARENT,
                         FrameLayout.LayoutParams.MATCH_PARENT
-                    ).also { lp ->
-                        lp.setMargins(margin, margin, margin, margin)
-                    }
+                    ).also { it.setMargins(rm, rm, rm, rm) }
                     background = GradientDrawable().apply {
                         shape = GradientDrawable.OVAL
                         setColor(Color.TRANSPARENT)
                         setStroke(dp(5), RING_COLOR)
                     }
-                    visibility = android.view.View.GONE
+                    visibility = View.GONE
+                })
+
+                // ── Child 3: Rank label (left column only) ──────────────────
+                // Rank = 8 − boardRow  (board row 0 = rank 8, board row 7 = rank 1)
+                if (vc == 0) {
+                    frame.addView(TextView(this).apply {
+                        text      = (8 - bRow(vr)).toString()
+                        textSize  = 9f
+                        setTextColor(lblColor)
+                        layoutParams = FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.WRAP_CONTENT,
+                            FrameLayout.LayoutParams.WRAP_CONTENT,
+                            Gravity.TOP or Gravity.START
+                        ).also { it.setMargins(dp(2), dp(2), 0, 0) }
+                    })
                 }
 
-                frame.addView(pieceImg)   // child 0
-                frame.addView(dotView)    // child 1
-                frame.addView(ringView)   // child 2
+                // ── Child 3/4: File label (bottom row only) ─────────────────
+                // File = 'a' + boardCol
+                if (vr == 7) {
+                    frame.addView(TextView(this).apply {
+                        text      = ('a' + bCol(vc)).toString()
+                        textSize  = 9f
+                        setTextColor(lblColor)
+                        layoutParams = FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.WRAP_CONTENT,
+                            FrameLayout.LayoutParams.WRAP_CONTENT,
+                            Gravity.BOTTOM or Gravity.END
+                        ).also { it.setMargins(0, 0, dp(2), dp(2)) }
+                    })
+                }
 
                 chessBoard.addView(frame)
                 cells[vr][vc] = frame
@@ -300,27 +328,16 @@ class GameActivity : AppCompatActivity() {
         updateTurnUI()
     }
 
-    private fun dp(value: Int) = (value * resources.displayMetrics.density + 0.5f).toInt()
-
-    /** Update rank (1-8) and file (a-h) labels based on board orientation. */
-    private fun updateAxisLabels() {
-        val ranks = if (boardFlipped) listOf("1","2","3","4","5","6","7","8")
-                    else              listOf("8","7","6","5","4","3","2","1")
-        val files = if (boardFlipped) listOf("h","g","f","e","d","c","b","a")
-                    else              listOf("a","b","c","d","e","f","g","h")
-        for (i in 0..7) (rankLabels.getChildAt(i) as? TextView)?.text = ranks[i]
-        for (i in 0..7) (fileLabels.getChildAt(i) as? TextView)?.text = files[i]
-    }
+    private fun dp(v: Int) = (v * resources.displayMetrics.density + 0.5f).toInt()
 
     // =========================================================================
     // Cell click
     // =========================================================================
 
     private fun onCellClick(cell: FrameLayout) {
-        // In vs-Computer: block taps when it's the AI's turn
         if (mode == GameMode.COMPUTER && gameState.whiteTurn != playerIsWhite) return
 
-        val pos    = cell.tag as Position   // board-coordinate position
+        val pos    = cell.tag as Position
         val tapped = board.getPiece(pos)
 
         if (selectedPos == null) {
@@ -331,7 +348,6 @@ class GameActivity : AppCompatActivity() {
         }
 
         val selPiece = board.getPiece(selectedPos!!)
-        // Tapping an own piece switches selection
         if (tapped != null && selPiece != null && tapped.isWhite == selPiece.isWhite) {
             resetSelection()
             selectedPos = pos
@@ -353,9 +369,7 @@ class GameActivity : AppCompatActivity() {
             resetSelection(); return
         }
 
-        // Pawn promotion: rows 0 and 7 are both back-ranks
         if (piece.type == PieceType.PAWN && (to.row == 0 || to.row == 7)) {
-            // Auto-promote the computer's pawn; show dialog for the human's pawn
             if (mode == GameMode.COMPUTER && piece.isWhite != playerIsWhite) {
                 executeMove(from, to, PieceType.QUEEN)
             } else {
@@ -381,7 +395,13 @@ class GameActivity : AppCompatActivity() {
 
         board.setPiece(to, finalPiece)
         board.setPiece(from, null)
-        resetSelection()
+
+        // Record last move BEFORE resetSelection (which calls resetHighlights)
+        lastMoveFrom   = from
+        lastMoveTo     = to
+        lastMovedPiece = finalPiece.type
+
+        resetSelection()   // clears dots/rings, applies last-move highlight
         refreshBoard()
         checkGameEnd { continueAfterMove() }
     }
@@ -409,7 +429,6 @@ class GameActivity : AppCompatActivity() {
             val piece    = board.getPiece(move.from) ?: return@launch
             val captured = board.getPiece(move.to)
             if (captured != null) {
-                // Computer's color is !playerIsWhite; add to the computer's captured list
                 if (!playerIsWhite) capturedByWhite.add(captured.type)
                 else                capturedByBlack.add(captured.type)
             }
@@ -420,6 +439,13 @@ class GameActivity : AppCompatActivity() {
 
             board.setPiece(move.to, finalPiece)
             board.setPiece(move.from, null)
+
+            lastMoveFrom   = move.from
+            lastMoveTo     = move.to
+            lastMovedPiece = finalPiece.type
+
+            // Apply last-move highlight, then refresh images
+            applyLastMoveHighlight()
             refreshBoard()
 
             checkGameEnd {
@@ -455,24 +481,32 @@ class GameActivity : AppCompatActivity() {
         val inCheck   = generator.isKingInCheck(whiteTurn)
         val thinking  = computerThinking
 
-        // Status strip
-        txtStatus.visibility = if (inCheck || thinking) android.view.View.VISIBLE else android.view.View.GONE
+        // ── Status strip (fixed height → board never jumps) ──────────────────
+        // Priority: thinking > check > last-move > invisible
         when {
             thinking -> {
-                txtStatus.text = "Scottfish is thinking…"
+                txtStatus.visibility = View.VISIBLE
+                txtStatus.text = "⏳  Scottfish is thinking…"
                 txtStatus.setTextColor(Color.parseColor("#D4AF37"))
             }
             inCheck -> {
-                txtStatus.text = "${if (whiteTurn) "White" else "Black"} is in CHECK!"
+                txtStatus.visibility = View.VISIBLE
+                txtStatus.text = "♚  ${if (whiteTurn) "White" else "Black"} is in CHECK!"
                 txtStatus.setTextColor(Color.parseColor("#E74C3C"))
             }
+            lastMoveTo != null -> {
+                txtStatus.visibility = View.VISIBLE
+                val who = if (whiteTurn) "Black" else "White"   // previous player
+                txtStatus.text = "$who played ${moveNotation()}"
+                txtStatus.setTextColor(Color.parseColor("#99B0B8D0"))
+            }
+            else -> txtStatus.visibility = View.INVISIBLE
         }
 
-        // Which card glows?
-        // bottomActive = true when it's the bottom player's turn.
+        // ── Active card highlighting ──────────────────────────────────────────
         // boardFlipped=false → bottom=White → active on whiteTurn
         // boardFlipped=true  → bottom=Black → active on !whiteTurn
-        // Formula: whiteTurn XOR boardFlipped
+        // General: bottomActive = whiteTurn XOR boardFlipped
         val bottomActive = (whiteTurn != boardFlipped) && !thinking
         val topActive    = (whiteTurn == boardFlipped) && !thinking
 
@@ -481,24 +515,41 @@ class GameActivity : AppCompatActivity() {
         topPlayerCard.setBackgroundResource(
             if (topActive)    R.drawable.bg_player_card_active else R.drawable.bg_player_card)
 
-        dotBottomTurn.visibility      = if (bottomActive) android.view.View.VISIBLE else android.view.View.INVISIBLE
-        dotTopTurn.visibility         = if (topActive)    android.view.View.VISIBLE else android.view.View.INVISIBLE
-        txtBottomTurnLabel.visibility = if (bottomActive) android.view.View.VISIBLE else android.view.View.INVISIBLE
-        txtTopTurnLabel.visibility    = if (topActive)    android.view.View.VISIBLE else android.view.View.INVISIBLE
+        dotBottomTurn.visibility      = if (bottomActive) View.VISIBLE  else View.INVISIBLE
+        dotTopTurn.visibility         = if (topActive)    View.VISIBLE  else View.INVISIBLE
+        txtBottomTurnLabel.visibility = if (bottomActive) View.VISIBLE  else View.INVISIBLE
+        txtTopTurnLabel.visibility    = if (topActive)    View.VISIBLE  else View.INVISIBLE
 
-        // Captured piece display.
-        // capturedByWhite = black pieces that white captured → show black symbols on bottom (when not flipped)
-        // capturedByBlack = white pieces that black captured → show white symbols on top (when not flipped)
+        // ── Captured pieces ───────────────────────────────────────────────────
+        // capturedByWhite = black pieces white took → show black symbols
+        // capturedByBlack = white pieces black took → show white symbols
         if (!boardFlipped) {
             txtBottomCaptured.text = capturedByWhite.joinToString("") { pieceSymbol(it, false) }
             txtTopCaptured.text    = capturedByBlack.joinToString("") { pieceSymbol(it, true)  }
         } else {
-            // Black is at bottom → black's captures (white pieces) shown at bottom
             txtBottomCaptured.text = capturedByBlack.joinToString("") { pieceSymbol(it, true)  }
             txtTopCaptured.text    = capturedByWhite.joinToString("") { pieceSymbol(it, false) }
         }
 
         refreshCheckHighlight()
+    }
+
+    /** Simple algebraic notation for the last move, e.g. "Ne2→e4" */
+    private fun moveNotation(): String {
+        val from  = lastMoveFrom  ?: return ""
+        val to    = lastMoveTo    ?: return ""
+        val piece = lastMovedPiece ?: return ""
+        val sym = when (piece) {
+            PieceType.PAWN   -> ""
+            PieceType.ROOK   -> "R"
+            PieceType.KNIGHT -> "N"
+            PieceType.BISHOP -> "B"
+            PieceType.QUEEN  -> "Q"
+            PieceType.KING   -> "K"
+        }
+        val fromSq = "${('a' + from.col)}${8 - from.row}"
+        val toSq   = "${('a' + to.col)}${8 - to.row}"
+        return "$sym$fromSq→$toSq"
     }
 
     private fun pieceSymbol(t: PieceType, white: Boolean) = when (t) {
@@ -523,25 +574,22 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun highlightMoves(from: Position, piece: ChessPiece) {
-        resetHighlights()
+        resetHighlights()   // resets squares + applies last-move colour underneath
 
-        // Gold tint on the selected piece's cell
+        // Gold tint on selected piece's square
         cells[dRow(from.row)][dCol(from.col)]?.setBackgroundColor(COLOR_SELECTED)
 
-        // Dot / ring on valid move targets
+        // Dot / ring on valid targets
         for (r in 0..7) for (c in 0..7) {
             val to = Position(r, c)
             if (!validator.isValidMove(from, to, piece) || !generator.isMoveSafe(from, to, piece)) continue
 
             val frame = cells[dRow(r)][dCol(c)] ?: continue
-            val dot  = frame.getChildAt(1) as? android.view.View
-            val ring = frame.getChildAt(2) as? android.view.View
+            val dot  = frame.getChildAt(1) as? View
+            val ring = frame.getChildAt(2) as? View
 
-            if (board.getPiece(to) != null) {
-                ring?.visibility = android.view.View.VISIBLE   // occupied → show ring
-            } else {
-                dot?.visibility  = android.view.View.VISIBLE   // empty → show dot
-            }
+            if (board.getPiece(to) != null) ring?.visibility = View.VISIBLE
+            else                            dot?.visibility  = View.VISIBLE
         }
     }
 
@@ -549,10 +597,23 @@ class GameActivity : AppCompatActivity() {
         for (vr in 0..7) for (vc in 0..7) {
             val frame = cells[vr][vc] ?: continue
             frame.setBackgroundColor(squareColor(vr, vc))
-            (frame.getChildAt(1) as? android.view.View)?.visibility = android.view.View.GONE
-            (frame.getChildAt(2) as? android.view.View)?.visibility = android.view.View.GONE
+            (frame.getChildAt(1) as? View)?.visibility = View.GONE
+            (frame.getChildAt(2) as? View)?.visibility = View.GONE
         }
-        refreshCheckHighlight()
+        applyLastMoveHighlight()  // re-draw last-move squares beneath any new highlight
+        refreshCheckHighlight()   // check highlight wins over everything
+    }
+
+    /** Tint the two squares of the last move with chess.com-style yellow-green. */
+    private fun applyLastMoveHighlight() {
+        fun tint(pos: Position) {
+            val vr = dRow(pos.row); val vc = dCol(pos.col)
+            cells[vr][vc]?.setBackgroundColor(
+                if ((vr + vc) % 2 == 0) COLOR_LAST_LIGHT else COLOR_LAST_DARK
+            )
+        }
+        lastMoveFrom?.let { tint(it) }
+        lastMoveTo?.let   { tint(it) }
     }
 
     private fun refreshCheckHighlight() {
@@ -620,6 +681,9 @@ class GameActivity : AppCompatActivity() {
         gameState.setTurn(storage.loadTurn(mode))
         capturedByWhite.clear()
         capturedByBlack.clear()
+        lastMoveFrom  = null
+        lastMoveTo    = null
+        lastMovedPiece = null
 
         storage.loadPieces(mode)
             ?.takeIf { it.isNotEmpty() }
