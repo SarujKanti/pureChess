@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="320dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card"
+    android:padding="24dp">
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Choose Your Color"
+        android:textColor="@color/gold"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:letterSpacing="0.02" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="20dp"
+        android:text="Select which side you want to play"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        android:gravity="center" />
+
+    <!-- Color option cards -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- White option -->
+        <LinearLayout
+            android:id="@+id/optionWhite"
+            android:layout_width="0dp"
+            android:layout_height="150dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="12dp"
+            android:background="@drawable/bg_color_card_white"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="♔"
+                android:textSize="48sp"
+                android:textColor="#2C1810"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="WHITE"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#2C1810"
+                android:letterSpacing="0.12"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="Move First"
+                android:textSize="10sp"
+                android:textColor="#774D3015"
+                android:gravity="center" />
+
+        </LinearLayout>
+
+        <!-- Black option -->
+        <LinearLayout
+            android:id="@+id/optionBlack"
+            android:layout_width="0dp"
+            android:layout_height="150dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="12dp"
+            android:background="@drawable/bg_color_card_black"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="♚"
+                android:textSize="48sp"
+                android:textColor="#EDE4CF"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="BLACK"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#EDE4CF"
+                android:letterSpacing="0.12"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="Move Second"
+                android:textSize="10sp"
+                android:textColor="#88EDE4CF"
+                android:gravity="center" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Cancel -->
+    <TextView
+        android:id="@+id/btnCancelColorPick"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Cancel"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp"
+        android:gravity="center"
+        android:padding="10dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+</LinearLayout>

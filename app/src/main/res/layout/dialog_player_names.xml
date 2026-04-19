@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="320dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card"
+    android:padding="24dp">
+
+    <!-- Header -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Player Names"
+        android:textColor="@color/gold"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:letterSpacing="0.02" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="22dp"
+        android:text="Customize names for this match"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        android:gravity="center" />
+
+    <!-- P1 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_player_card"
+        android:padding="14dp"
+        android:layout_marginBottom="10dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="♔   Player 1  —  Bottom · White"
+            android:textColor="@color/gold"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.04" />
+
+        <EditText
+            android:id="@+id/etP1Name"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:hint="Player 1"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_muted"
+            android:textSize="15sp"
+            android:background="@drawable/bg_edit_text"
+            android:paddingHorizontal="12dp"
+            android:inputType="textPersonName"
+            android:maxLines="1"
+            android:imeOptions="actionNext" />
+    </LinearLayout>
+
+    <!-- P2 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_player_card"
+        android:padding="14dp"
+        android:layout_marginBottom="22dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="♚   Player 2  —  Top · Black"
+            android:textColor="@color/text_secondary"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.04" />
+
+        <EditText
+            android:id="@+id/etP2Name"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:hint="Player 2"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_muted"
+            android:textSize="15sp"
+            android:background="@drawable/bg_edit_text"
+            android:paddingHorizontal="12dp"
+            android:inputType="textPersonName"
+            android:maxLines="1"
+            android:imeOptions="actionDone" />
+    </LinearLayout>
+
+    <!-- Start button -->
+    <Button
+        android:id="@+id/btnStartGame"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="START GAME"
+        android:textColor="@color/bg_dark"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.08"
+        android:background="@drawable/bg_button_gold"
+        android:stateListAnimator="@null" />
+
+    <!-- Cancel -->
+    <TextView
+        android:id="@+id/btnCancelNames"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="Cancel"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp"
+        android:gravity="center"
+        android:padding="10dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+</LinearLayout>
