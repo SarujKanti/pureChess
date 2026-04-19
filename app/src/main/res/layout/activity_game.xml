@@ -148,7 +148,7 @@
         android:layout_marginHorizontal="8dp"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintTop_toBottomOf="@id/topPlayerCard"
-        app:layout_constraintBottom_toTopOf="@id/bottomPlayerCard"
+        app:layout_constraintBottom_toTopOf="@id/moveHistoryScroll"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="0.5"
@@ -162,6 +162,31 @@
             android:columnCount="8"
             android:rowCount="8" />
     </FrameLayout>
+
+    <!-- ── Move history strip ────────────────────────────────────────── -->
+    <HorizontalScrollView
+        android:id="@+id/moveHistoryScroll"
+        android:layout_width="0dp"
+        android:layout_height="32dp"
+        android:scrollbars="none"
+        android:fadeScrollbars="true"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="4dp"
+        app:layout_constraintBottom_toTopOf="@id/bottomPlayerCard"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/txtMoveHistory"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:textColor="@color/text_secondary"
+            android:textSize="11sp"
+            android:fontFamily="monospace"
+            android:paddingHorizontal="4dp"
+            android:text="" />
+    </HorizontalScrollView>
 
     <!-- ── Bottom player card ─────────────────────────────────────────── -->
     <LinearLayout
