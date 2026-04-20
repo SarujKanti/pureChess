@@ -4,9 +4,12 @@ import android.app.Dialog
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
@@ -14,24 +17,46 @@ import androidx.appcompat.app.AppCompatActivity
 import com.skd.mychess.R
 import com.skd.mychess.model.GameMode
 import com.skd.mychess.storage.LocalGameStorage
+import com.skd.mychess.storage.SettingsManager
 
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var storage: LocalGameStorage
+    private lateinit var settings: SettingsManager
     private var selectedDifficulty = 5
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Apply saved app theme before setContentView
+        settings = SettingsManager(this)
+        settings.applyAppTheme()
+
         setContentView(R.layout.activity_home)
         storage = LocalGameStorage(this)
 
+        applyBackground()
         setupDifficultySeekBar()
         setupButtons()
     }
 
     override fun onResume() {
         super.onResume()
+        // Re-apply background in case user changed it in Settings
+        applyBackground()
         updateResumeButtons()
+    }
+
+    // =========================================================================
+    // Background
+    // =========================================================================
+
+    private fun applyBackground() {
+        val bgView = findViewById<View>(R.id.homeBackground) ?: return
+        val (_, start, end) = SettingsManager.HOME_BACKGROUNDS[settings.homeBackground]
+        bgView.background = GradientDrawable(
+            GradientDrawable.Orientation.TL_BR, intArrayOf(start, end)
+        )
     }
 
     // =========================================================================
@@ -69,7 +94,12 @@ class HomeActivity : AppCompatActivity() {
     // =========================================================================
 
     private fun setupButtons() {
-        // vs Computer — show color-pick dialog
+        // Settings icon
+        findViewById<ImageButton>(R.id.btnSettings).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+
+        // vs Computer
         findViewById<Button>(R.id.btnNewComputer).setOnClickListener {
             showColorPickDialog()
         }
@@ -77,7 +107,7 @@ class HomeActivity : AppCompatActivity() {
             launchGame(GameMode.COMPUTER, resume = true)
         }
 
-        // vs Friend — show player-names dialog (P1 always White at bottom)
+        // vs Friend
         findViewById<Button>(R.id.btnNewFriend).setOnClickListener {
             showPlayerNamesDialog()
         }
@@ -97,7 +127,7 @@ class HomeActivity : AppCompatActivity() {
         resumeComputer.isEnabled = storage.hasSavedGame(GameMode.COMPUTER)
         resumeComputer.alpha     = if (resumeComputer.isEnabled) 1f else 0.38f
         resumeFriend.isEnabled   = storage.hasSavedGame(GameMode.FRIEND)
-        resumeFriend.alpha       = if (resumeFriend.isEnabled)   1f else 0.38f
+        resumeFriend.alpha       = if (resumeFriend.isEnabled) 1f else 0.38f
     }
 
     // =========================================================================
@@ -124,7 +154,6 @@ class HomeActivity : AppCompatActivity() {
         dialog.findViewById<TextView>(R.id.btnCancelColorPick).setOnClickListener {
             dialog.dismiss()
         }
-
         dialog.show()
     }
 
@@ -150,7 +179,7 @@ class HomeActivity : AppCompatActivity() {
             launchGame(
                 mode          = GameMode.FRIEND,
                 resume        = false,
-                playerIsWhite = true,   // P1 always plays White at the bottom
+                playerIsWhite = true,
                 p1Name        = p1,
                 p2Name        = p2
             )
@@ -158,7 +187,6 @@ class HomeActivity : AppCompatActivity() {
         dialog.findViewById<TextView>(R.id.btnCancelNames).setOnClickListener {
             dialog.dismiss()
         }
-
         dialog.show()
     }
 

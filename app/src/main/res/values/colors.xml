@@ -4,11 +4,11 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- App background - deep dark navy -->
-    <color name="bg_dark">#0D1117</color>
-    <color name="bg_surface">#161B27</color>
-    <color name="bg_card">#1E2538</color>
-    <color name="bg_card_elevated">#252D42</color>
+    <!-- App background (light mode — night mode overrides in values-night/colors.xml) -->
+    <color name="bg_dark">#F0F2F5</color>
+    <color name="bg_surface">#FFFFFF</color>
+    <color name="bg_card">#FFFFFF</color>
+    <color name="bg_card_elevated">#F7F8FA</color>
 
     <!-- Board squares -->
     <color name="board_light">#F0D9B5</color>
@@ -26,10 +26,10 @@
     <color name="gold_light">#F0CC55</color>
     <color name="gold_dark">#A07820</color>
 
-    <!-- Text -->
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#B0B8D0</color>
-    <color name="text_muted">#606880</color>
+    <!-- Text (light mode; dark overrides in values-night) -->
+    <color name="text_primary">#1A1A2E</color>
+    <color name="text_secondary">#4A4A6A</color>
+    <color name="text_muted">#8A8AAA</color>
 
     <!-- Player colors -->
     <color name="player_white_active">#FFFFFF</color>
@@ -37,9 +37,9 @@
     <color name="turn_white">#F0D9B5</color>
     <color name="turn_black">#B58863</color>
 
-    <!-- Status -->
-    <color name="check_red">#E74C3C</color>
-    <color name="win_green">#2ECC71</color>
+    <!-- Status (same in both modes) -->
+    <color name="check_red">#C0392B</color>
+    <color name="win_green">#27AE60</color>
 
     <!-- Legacy kept for compatibility -->
     <color name="gray">#4B4747</color>
