@@ -17,7 +17,9 @@ import com.skd.mychess.model.ChessPiece
 import com.skd.mychess.model.GameMode
 import com.skd.mychess.model.PieceType
 import com.skd.mychess.model.Position
+import com.skd.mychess.engine.SoundManager
 import com.skd.mychess.storage.LocalGameStorage
+import com.skd.mychess.storage.SettingsManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,9 +35,7 @@ class GameActivity : AppCompatActivity() {
         const val EXTRA_P1_NAME      = "p1_name"
         const val EXTRA_P2_NAME      = "p2_name"
 
-        // Board square base colours
-        private val COLOR_LIGHT      = Color.parseColor("#F0D9B5")
-        private val COLOR_DARK       = Color.parseColor("#B58863")
+        // Fixed highlight colours (independent of board theme)
         private val COLOR_SELECTED   = Color.parseColor("#BBD4AF37")
         private val COLOR_CHECK      = Color.parseColor("#CCFF3A3A")
         private val DOT_COLOR        = Color.parseColor("#55000000")
@@ -43,6 +43,10 @@ class GameActivity : AppCompatActivity() {
         private val COLOR_LAST_LIGHT = Color.parseColor("#CCF6F644")
         private val COLOR_LAST_DARK  = Color.parseColor("#CCBACA2B")
     }
+
+    // Board theme colours — loaded from SettingsManager in onCreate
+    private var COLOR_LIGHT = Color.parseColor("#F0D9B5")
+    private var COLOR_DARK  = Color.parseColor("#B58863")
 
     // ─── Engine ──────────────────────────────────────────────────────────────
     private val board     = ChessBoard()
@@ -93,6 +97,10 @@ class GameActivity : AppCompatActivity() {
     private lateinit var moveHistoryScroll:  HorizontalScrollView
     private lateinit var txtMoveHistory:     TextView
 
+    // ─── Settings & Sound ────────────────────────────────────────────────────
+    private lateinit var settings: SettingsManager
+    private lateinit var sound:    SoundManager
+
     // ─── Storage ─────────────────────────────────────────────────────────────
     private lateinit var storage: LocalGameStorage
 
@@ -125,8 +133,15 @@ class GameActivity : AppCompatActivity() {
         p2Name        = intent.getStringExtra(EXTRA_P2_NAME) ?: "Player 2"
 
         storage   = LocalGameStorage(this)
+        settings  = SettingsManager(this)
+        sound     = SoundManager(settings)
         generator = MoveGenerator(board, gameState)
         ai        = ScottfishEngine(board)
+
+        // Load board theme colours from settings
+        val (_, light, dark) = SettingsManager.BOARD_THEMES[settings.boardTheme]
+        COLOR_LIGHT = light
+        COLOR_DARK  = dark
 
         bindViews()
         setupTopBar()
@@ -430,6 +445,13 @@ class GameActivity : AppCompatActivity() {
             gameState.enPassantTarget = null
         }
 
+        // ── Sound feedback ────────────────────────────────────────────────────
+        when {
+            isCastling  -> sound.playCastle()
+            captured != null || isEnPassant -> sound.playCapture()
+            else        -> sound.playMove()
+        }
+
         // ── Record & render ───────────────────────────────────────────────────
         moveLog.add(notation)
         lastMoveFrom   = from
@@ -541,6 +563,13 @@ class GameActivity : AppCompatActivity() {
                 gameState.enPassantTarget = null
             }
 
+            // Sound feedback for computer move
+            when {
+                isCastling  -> sound.playCastle()
+                captured != null || isEnPassant -> sound.playCapture()
+                else        -> sound.playMove()
+            }
+
             moveLog.add(notation)
             lastMoveFrom   = move.from
             lastMoveTo     = move.to
@@ -566,10 +595,18 @@ class GameActivity : AppCompatActivity() {
         when {
             generator.isCheckmate(opponent) -> {
                 val winner = if (gameState.whiteTurn) "White" else "Black"
+                sound.playWin()
                 updateTurnUI()
                 showEndDialog("Checkmate!", "$winner wins!")
             }
-            generator.isStalemate(opponent) -> showEndDialog("Stalemate", "It's a draw!")
+            generator.isStalemate(opponent) -> {
+                sound.playDraw()
+                showEndDialog("Stalemate", "It's a draw!")
+            }
+            generator.isKingInCheck(opponent) -> {
+                sound.playCheck()
+                onContinue()
+            }
             else -> onContinue()
         }
     }
@@ -724,10 +761,35 @@ class GameActivity : AppCompatActivity() {
     // =========================================================================
 
     private fun refreshBoard() {
+        // Piece-style colour filter: 0=Classic (none), 1=Warm sepia, 2=Ice blue
+        val filter: android.graphics.ColorFilter? = when (settings.pieceStyle) {
+            1 -> android.graphics.ColorMatrixColorFilter(android.graphics.ColorMatrix().apply {
+                // Warm sepia: boost red/green, reduce blue
+                set(floatArrayOf(
+                    1.1f, 0.2f, 0.0f, 0f, 10f,
+                    0.0f, 1.0f, 0.0f, 0f,  5f,
+                    0.0f, 0.0f, 0.7f, 0f,  0f,
+                    0.0f, 0.0f, 0.0f, 1f,  0f
+                ))
+            })
+            2 -> android.graphics.ColorMatrixColorFilter(android.graphics.ColorMatrix().apply {
+                // Ice blue: boost blue, cool down reds
+                set(floatArrayOf(
+                    0.8f, 0.0f, 0.1f, 0f,  0f,
+                    0.0f, 0.9f, 0.1f, 0f,  5f,
+                    0.0f, 0.0f, 1.2f, 0f, 15f,
+                    0.0f, 0.0f, 0.0f, 1f,  0f
+                ))
+            })
+            else -> null
+        }
+
         for (vr in 0..7) for (vc in 0..7) {
             val frame = cells[vr][vc] ?: continue
             val piece = board.getPiece(Position(bRow(vr), bCol(vc)))
-            (frame.getChildAt(0) as? ImageView)?.setImageResource(piece?.imageRes ?: 0)
+            val iv    = frame.getChildAt(0) as? ImageView ?: continue
+            iv.setImageResource(piece?.imageRes ?: 0)
+            iv.colorFilter = if (piece != null) filter else null
         }
     }
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark-mode overrides — these win over values/colors.xml at night -->
+<resources>
+    <color name="bg_dark">#0D1117</color>
+    <color name="bg_surface">#161B27</color>
+    <color name="bg_card">#1E2538</color>
+    <color name="bg_card_elevated">#252D42</color>
+
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B8D0</color>
+    <color name="text_muted">#606880</color>
+
+    <color name="check_red">#E74C3C</color>
+    <color name="win_green">#2ECC71</color>
+</resources>
