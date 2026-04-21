@@ -34,10 +34,12 @@ class OnlineActivity : AppCompatActivity() {
     private val db = Firebase.firestore
     private var roomListener: ListenerRegistration? = null
     private var currentRoomCode: String? = null
+    private var timeMinutes = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_online)
+        timeMinutes = intent.getIntExtra(GameActivity.EXTRA_TIME_MINUTES, 0)
 
         findViewById<android.widget.ImageButton>(R.id.btnBack).setOnClickListener { finish() }
         setupCreateRoom()
@@ -69,6 +71,7 @@ class OnlineActivity : AppCompatActivity() {
                 "host"      to "Player 1",
                 "guest"     to null,
                 "status"    to "waiting",
+                "moves"     to listOf<String>(),      // move log for real-time sync
                 "createdAt" to FieldValue.serverTimestamp()
             )
 
@@ -155,9 +158,10 @@ class OnlineActivity : AppCompatActivity() {
     private fun launchOnlineGame(roomCode: String, isHost: Boolean) {
         val intent = Intent(this, GameActivity::class.java).apply {
             putExtra(GameActivity.EXTRA_MODE,         GameMode.ONLINE.name)
-            putExtra(GameActivity.EXTRA_PLAYER_WHITE, isHost)   // host = white
+            putExtra(GameActivity.EXTRA_PLAYER_WHITE, isHost)   // host = white, guest = black
             putExtra(GameActivity.EXTRA_RESUME,       false)
-            putExtra("EXTRA_ROOM_CODE",               roomCode)
+            putExtra(GameActivity.EXTRA_ROOM_CODE,    roomCode)
+            putExtra(GameActivity.EXTRA_TIME_MINUTES, timeMinutes)
         }
         startActivity(intent)
         finish()

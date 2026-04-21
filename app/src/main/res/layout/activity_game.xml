@@ -136,6 +136,19 @@
             android:textStyle="bold"
             android:letterSpacing="0.08"
             android:visibility="invisible" />
+
+        <!-- Clock — visible only when time control is active -->
+        <TextView
+            android:id="@+id/txtTopClock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:text=""
+            android:textColor="@color/gold"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:visibility="gone" />
     </LinearLayout>
 
     <!-- ── Board (1:1 square, full-width, labels drawn INSIDE cells) ── -->
@@ -256,6 +269,19 @@
             android:textStyle="bold"
             android:letterSpacing="0.08"
             android:visibility="invisible" />
+
+        <!-- Clock — visible only when time control is active -->
+        <TextView
+            android:id="@+id/txtBottomClock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:text=""
+            android:textColor="@color/gold"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:visibility="gone" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -147,7 +147,7 @@
             android:hint="Enter room code"
             android:textColorHint="@color/text_muted"
             android:textColor="@color/text_primary"
-            android:inputType="textCapCharacters|number"
+            android:inputType="textCapCharacters"
             android:maxLength="6"
             android:gravity="center"
             android:textSize="22sp"
