@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Dark gradient background — set programmatically -->
+    <View
+        android:id="@+id/splashBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Gold divider top-accent line -->
+    <View
+        android:layout_width="60dp"
+        android:layout_height="2dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="80dp"
+        android:background="#D4AF37"
+        android:alpha="0.5" />
+
+    <!-- Center content: logo + title + tagline -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingHorizontal="32dp">
+
+        <ImageView
+            android:id="@+id/splashLogo"
+            android:layout_width="110dp"
+            android:layout_height="110dp"
+            android:src="@drawable/chess_logo"
+            android:contentDescription="PureChess logo"
+            android:scaleType="fitCenter"
+            android:alpha="0" />
+
+        <TextView
+            android:id="@+id/splashTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="PureChess"
+            android:textColor="#D4AF37"
+            android:textSize="42sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08"
+            android:alpha="0" />
+
+        <TextView
+            android:id="@+id/splashTagline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="The art of chess, perfected"
+            android:textColor="#8A9AB8"
+            android:textSize="14sp"
+            android:letterSpacing="0.06"
+            android:alpha="0" />
+
+    </LinearLayout>
+
+    <!-- Bottom: Powered by SKD -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="40dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:alpha="0"
+        android:id="@+id/splashPoweredLayout">
+
+        <View
+            android:layout_width="40dp"
+            android:layout_height="1dp"
+            android:layout_marginBottom="10dp"
+            android:background="#3A4A6A" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Powered by SKD"
+            android:textColor="#4A5A78"
+            android:textSize="12sp"
+            android:letterSpacing="0.12"
+            android:textAllCaps="true" />
+    </LinearLayout>
+
+</FrameLayout>

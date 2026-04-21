@@ -96,7 +96,7 @@ class SettingsManager(context: Context) {
         // ── Piece style names ─────────────────────────────────────────────────
         val PIECE_STYLES = listOf("Classic", "Warm", "Ice")
 
-        // ── Home background gradients: Triple(name, startColor, endColor) ─────
+        // ── Home background gradients (dark mode): Triple(name, startColor, endColor) ─
         val HOME_BACKGROUNDS = listOf(
             Triple("Midnight",  0xFF0D1B2A.toInt(), 0xFF1B4965.toInt()),
             Triple("Purple",    0xFF2D1B69.toInt(), 0xFF4A1860.toInt()),
@@ -108,6 +108,20 @@ class SettingsManager(context: Context) {
             Triple("Crimson",   0xFF2D0000.toInt(), 0xFF7B0000.toInt()),
             Triple("Navy Blue", 0xFF0A1628.toInt(), 0xFF1E3A5F.toInt()),
             Triple("Olive",     0xFF1A2200.toInt(), 0xFF3D5200.toInt()),
+        )
+
+        // ── Home background gradients (light mode): soft pastel versions ───────
+        val HOME_BACKGROUNDS_LIGHT = listOf(
+            Triple("Pearl",     0xFFCDD8F0.toInt(), 0xFFABC0E8.toInt()),
+            Triple("Lavender",  0xFFD4C8F0.toInt(), 0xFFBBA8E8.toInt()),
+            Triple("Mint",      0xFFBCDDD0.toInt(), 0xFF9CCABC.toInt()),
+            Triple("Teal",      0xFFB0D4E0.toInt(), 0xFF8DC4D8.toInt()),
+            Triple("Rose",      0xFFF0C8D8.toInt(), 0xFFE0A0BC.toInt()),
+            Triple("Caramel",   0xFFF0D8B8.toInt(), 0xFFDDB890.toInt()),
+            Triple("Slate",     0xFFC0C8E0.toInt(), 0xFFA0AEDD.toInt()),
+            Triple("Blush",     0xFFF0C8C8.toInt(), 0xFFE0A0A0.toInt()),
+            Triple("Sky",       0xFFB8D4F0.toInt(), 0xFF90C0F0.toInt()),
+            Triple("Sage",      0xFFC8DCC0.toInt(), 0xFFAAC8A8.toInt()),
         )
     }
 }

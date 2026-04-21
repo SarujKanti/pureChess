@@ -5,10 +5,10 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- App background (light mode — night mode overrides in values-night/colors.xml) -->
-    <color name="bg_dark">#F0F2F5</color>
+    <color name="bg_dark">#EEF1F8</color>
     <color name="bg_surface">#FFFFFF</color>
-    <color name="bg_card">#FFFFFF</color>
-    <color name="bg_card_elevated">#F7F8FA</color>
+    <color name="bg_card">#F8F9FF</color>
+    <color name="bg_card_elevated">#C8D0E8</color>
 
     <!-- Board squares -->
     <color name="board_light">#F0D9B5</color>
