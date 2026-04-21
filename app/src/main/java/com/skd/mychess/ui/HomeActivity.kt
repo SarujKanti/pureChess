@@ -2,6 +2,7 @@ package com.skd.mychess.ui
 
 import android.app.Dialog
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
@@ -14,6 +15,7 @@ import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowInsetsControllerCompat
 import com.skd.mychess.R
 import com.skd.mychess.model.GameMode
 import com.skd.mychess.storage.LocalGameStorage
@@ -35,6 +37,12 @@ class HomeActivity : AppCompatActivity() {
         setContentView(R.layout.activity_home)
         storage = LocalGameStorage(this)
 
+        // Fix status bar icon color: dark icons on light bg, light icons on dark bg
+        val isNightOnCreate = (resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        WindowInsetsControllerCompat(window, window.decorView)
+            .isAppearanceLightStatusBars = !isNightOnCreate
+
         applyBackground()
         setupDifficultySeekBar()
         setupButtons()
@@ -53,7 +61,12 @@ class HomeActivity : AppCompatActivity() {
 
     private fun applyBackground() {
         val bgView = findViewById<View>(R.id.homeBackground) ?: return
-        val (_, start, end) = SettingsManager.HOME_BACKGROUNDS[settings.homeBackground]
+        val isNight = (resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        val backgrounds = if (isNight) SettingsManager.HOME_BACKGROUNDS
+                          else         SettingsManager.HOME_BACKGROUNDS_LIGHT
+        val idx = settings.homeBackground.coerceIn(0, backgrounds.size - 1)
+        val (_, start, end) = backgrounds[idx]
         bgView.background = GradientDrawable(
             GradientDrawable.Orientation.TL_BR, intArrayOf(start, end)
         )

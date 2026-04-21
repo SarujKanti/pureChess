@@ -15,15 +15,22 @@
         android:theme="@style/Theme.MyChess"
         tools:targetApi="31">
 
+        <!-- Splash is the true entry-point; HomeActivity is reached via Intent -->
         <activity
-            android:name=".ui.HomeActivity"
+            android:name=".ui.SplashActivity"
             android:exported="true"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.HomeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ui.GameActivity"
