@@ -8,6 +8,13 @@
         <item name="android:windowBackground">@color/bg_dark</item>
         <item name="android:statusBarColor">@color/bg_dark</item>
         <item name="android:navigationBarColor">@color/bg_dark</item>
+        <!--
+          Android 15 (API 35) forces edge-to-edge for targetSdk=35 apps.
+          This opt-out restores the traditional status/nav-bar behaviour so
+          content does NOT draw behind the system bars.
+          (Ignored silently on API < 35 — safe for all versions.)
+        -->
+        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
     </style>
 
     <style name="Theme.MyChess" parent="Base.Theme.MyChess" />
