@@ -5,12 +5,18 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.skd.mychess.R
 import com.skd.mychess.engine.*
 import com.skd.mychess.model.ChessPiece
@@ -34,6 +40,8 @@ class GameActivity : AppCompatActivity() {
         const val EXTRA_PLAYER_WHITE = "player_is_white"
         const val EXTRA_P1_NAME      = "p1_name"
         const val EXTRA_P2_NAME      = "p2_name"
+        const val EXTRA_TIME_MINUTES = "time_minutes"
+        const val EXTRA_ROOM_CODE    = "room_code"
 
         // Fixed highlight colours (independent of board theme)
         private val COLOR_SELECTED   = Color.parseColor("#BBD4AF37")
@@ -63,6 +71,19 @@ class GameActivity : AppCompatActivity() {
     private var isAbandoned      = false   // true → onPause must NOT re-save
     private var p1Name           = "Player 1"
     private var p2Name           = "Player 2"
+    private var timeMinutes      = 0       // 0 = no timer
+
+    // ─── Timer ───────────────────────────────────────────────────────────────
+    private val timerHandler   = Handler(Looper.getMainLooper())
+    private var bottomTimeMs   = 0L
+    private var topTimeMs      = 0L
+    private var timerActive    = false
+    private var wasTimerActive = false
+
+    // ─── Online (Firestore) ───────────────────────────────────────────────────
+    private var roomCode: String?  = null
+    private var lastSyncedMoveCount = 0
+    private var onlineMoveListener: ListenerRegistration? = null
 
     // Last move tracking (board coordinates)
     private var lastMoveFrom:   Position?  = null
@@ -96,6 +117,8 @@ class GameActivity : AppCompatActivity() {
     private lateinit var imgBottomPlayer:    TextView
     private lateinit var moveHistoryScroll:  HorizontalScrollView
     private lateinit var txtMoveHistory:     TextView
+    private lateinit var txtTopClock:        TextView
+    private lateinit var txtBottomClock:     TextView
 
     // ─── Settings & Sound ────────────────────────────────────────────────────
     private lateinit var settings: SettingsManager
@@ -131,6 +154,8 @@ class GameActivity : AppCompatActivity() {
         playerIsWhite = intent.getBooleanExtra(EXTRA_PLAYER_WHITE, true)
         p1Name        = intent.getStringExtra(EXTRA_P1_NAME) ?: "Player 1"
         p2Name        = intent.getStringExtra(EXTRA_P2_NAME) ?: "Player 2"
+        timeMinutes   = intent.getIntExtra(EXTRA_TIME_MINUTES, 0)
+        roomCode      = intent.getStringExtra(EXTRA_ROOM_CODE)
 
         storage   = LocalGameStorage(this)
         settings  = SettingsManager(this)
@@ -156,7 +181,20 @@ class GameActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        wasTimerActive = timerActive
+        pauseTimer()
         if (!computerThinking && !isAbandoned) saveGame()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (wasTimerActive) startTimer()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        pauseTimer()
+        onlineMoveListener?.remove()
     }
 
     // =========================================================================
@@ -182,6 +220,8 @@ class GameActivity : AppCompatActivity() {
         imgBottomPlayer    = findViewById(R.id.imgBottomPlayer)
         moveHistoryScroll  = findViewById(R.id.moveHistoryScroll)
         txtMoveHistory     = findViewById(R.id.txtMoveHistory)
+        txtTopClock        = findViewById(R.id.txtTopClock)
+        txtBottomClock     = findViewById(R.id.txtBottomClock)
     }
 
     // =========================================================================
@@ -211,8 +251,12 @@ class GameActivity : AppCompatActivity() {
                 imgTopPlayer.text    = "♚"
             }
             GameMode.ONLINE -> {
-                txtModeLabel.text    = "Online"
+                txtModeLabel.text       = "Online"
                 txtDiffBadge.visibility = View.GONE
+                txtBottomName.text      = if (playerIsWhite) "You (White)" else "You (Black)"
+                txtTopName.text         = if (playerIsWhite) "Opponent (Black)" else "Opponent (White)"
+                imgBottomPlayer.text    = if (playerIsWhite) "♔" else "♚"
+                imgTopPlayer.text       = if (playerIsWhite) "♚" else "♔"
             }
         }
     }
@@ -223,7 +267,8 @@ class GameActivity : AppCompatActivity() {
 
     private fun startNewGame() {
         isAbandoned    = false
-        boardFlipped   = (mode == GameMode.COMPUTER && !playerIsWhite)
+        // User is always on the bottom; flip board when playing black
+        boardFlipped   = !playerIsWhite && mode != GameMode.FRIEND
         lastMoveFrom   = null
         lastMoveTo     = null
         lastMovedPiece = null
@@ -235,9 +280,28 @@ class GameActivity : AppCompatActivity() {
         capturedByBlack.clear()
         placeInitialPieces()
         txtMoveHistory.text = ""
+
+        // Reset & display timer
+        pauseTimer()
+        val totalMs = timeMinutes * 60_000L
+        bottomTimeMs = totalMs
+        topTimeMs    = totalMs
+        val hasTimer = totalMs > 0L
+        txtTopClock.visibility    = if (hasTimer) View.VISIBLE else View.GONE
+        txtBottomClock.visibility = if (hasTimer) View.VISIBLE else View.GONE
+        if (hasTimer) updateClockUI()
+
+        // Set up online move listener
+        onlineMoveListener?.remove()
+        lastSyncedMoveCount = 0
+        if (mode == GameMode.ONLINE) listenForOnlineMoves()
+
         chessBoard.post {
             createBoardUI()
-            if (mode == GameMode.COMPUTER && !playerIsWhite) triggerComputerMove()
+            val computerGoesFirst = mode == GameMode.COMPUTER && !playerIsWhite
+            if (computerGoesFirst) triggerComputerMove()
+            // Start timer after board is laid out (skip if computer moves first — timer ticks for it)
+            if (hasTimer) startTimer()
         }
     }
 
@@ -339,7 +403,9 @@ class GameActivity : AppCompatActivity() {
     // =========================================================================
 
     private fun onCellClick(cell: FrameLayout) {
-        if (mode == GameMode.COMPUTER && gameState.whiteTurn != playerIsWhite) return
+        // Block input when it's not our turn (vs Computer or Online)
+        if ((mode == GameMode.COMPUTER || mode == GameMode.ONLINE) &&
+            gameState.whiteTurn != playerIsWhite) return
 
         val pos    = cell.tag as Position
         val tapped = board.getPiece(pos)
@@ -457,6 +523,14 @@ class GameActivity : AppCompatActivity() {
         lastMoveFrom   = from
         lastMoveTo     = to
         lastMovedPiece = finalPiece.type
+
+        // Push to Firestore when we made this move in online mode
+        // (gameState.whiteTurn still equals our color — not yet switched)
+        if (mode == GameMode.ONLINE && gameState.whiteTurn == playerIsWhite) {
+            val ms = "${from.row},${from.col},${to.row},${to.col}" +
+                     (if (promoteTo != null) ",${promoteTo.name}" else "")
+            pushMoveToFirestore(ms)
+        }
 
         resetSelection()
         refreshBoard()
@@ -947,6 +1021,7 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun showEndDialog(title: String, message: String) {
+        pauseTimer()
         AlertDialog.Builder(this)
             .setTitle(title)
             .setMessage(message)
@@ -954,6 +1029,122 @@ class GameActivity : AppCompatActivity() {
             .setPositiveButton("New Game") { _, _ -> storage.clearGame(mode); startNewGame() }
             .setNegativeButton("Exit")     { _, _ -> finish() }
             .show()
+    }
+
+    // =========================================================================
+    // Timer
+    // =========================================================================
+
+    private val timerTick = object : Runnable {
+        override fun run() {
+            if (!timerActive) return
+            // Bottom player's turn = whiteTurn XOR boardFlipped
+            // (white on bottom when not flipped; black on bottom when flipped)
+            val isBottomTurn = gameState.whiteTurn != boardFlipped
+            if (isBottomTurn) {
+                bottomTimeMs = (bottomTimeMs - 100L).coerceAtLeast(0L)
+                if (bottomTimeMs == 0L) {
+                    timerActive = false
+                    runOnUiThread { onTimeUp(isBottom = true) }
+                    return
+                }
+            } else {
+                topTimeMs = (topTimeMs - 100L).coerceAtLeast(0L)
+                if (topTimeMs == 0L) {
+                    timerActive = false
+                    runOnUiThread { onTimeUp(isBottom = false) }
+                    return
+                }
+            }
+            runOnUiThread { updateClockUI() }
+            timerHandler.postDelayed(this, 100)
+        }
+    }
+
+    private fun startTimer() {
+        if (bottomTimeMs <= 0L && topTimeMs <= 0L) return
+        timerActive = true
+        timerHandler.removeCallbacks(timerTick)
+        timerHandler.post(timerTick)
+    }
+
+    private fun pauseTimer() {
+        timerActive = false
+        timerHandler.removeCallbacks(timerTick)
+    }
+
+    private fun onTimeUp(isBottom: Boolean) {
+        val winner = if (isBottom) txtTopName.text else txtBottomName.text
+        showEndDialog("Time's Up!", "$winner wins on time!")
+    }
+
+    private fun updateClockUI() {
+        if (bottomTimeMs <= 0L && topTimeMs <= 0L) return
+        txtBottomClock.text = formatTime(bottomTimeMs)
+        txtTopClock.text    = formatTime(topTimeMs)
+        val red  = Color.parseColor("#E74C3C")
+        val gold = Color.parseColor("#D4AF37")
+        txtBottomClock.setTextColor(if (bottomTimeMs in 1..30_000L) red else gold)
+        txtTopClock.setTextColor(if (topTimeMs in 1..30_000L) red else gold)
+    }
+
+    private fun formatTime(ms: Long): String {
+        val total = (ms / 1000).coerceAtLeast(0L)
+        val m = total / 60
+        val s = total % 60
+        return "%d:%02d".format(m, s)
+    }
+
+    // =========================================================================
+    // Online move sync (Firestore)
+    // =========================================================================
+
+    /**
+     * Watches the room document's [moves] array. Any moves beyond
+     * [lastSyncedMoveCount] are applied to the local board.
+     */
+    private fun listenForOnlineMoves() {
+        val code = roomCode ?: return
+        onlineMoveListener = Firebase.firestore.collection("rooms").document(code)
+            .addSnapshotListener { snap, err ->
+                if (err != null || snap == null || isAbandoned) return@addSnapshotListener
+                val moves = snap.get("moves") as? List<*> ?: return@addSnapshotListener
+                if (moves.size > lastSyncedMoveCount) {
+                    val newMoves = moves.drop(lastSyncedMoveCount)
+                    lastSyncedMoveCount = moves.size
+                    for (m in newMoves) applyOnlineMove(m.toString())
+                }
+            }
+    }
+
+    /** Decodes and applies an opponent move received from Firestore. */
+    private fun applyOnlineMove(moveStr: String) {
+        val parts = moveStr.split(",")
+        if (parts.size < 4) return
+        try {
+            val from      = Position(parts[0].toInt(), parts[1].toInt())
+            val to        = Position(parts[2].toInt(), parts[3].toInt())
+            val promoteTo = parts.getOrNull(4)?.let { PieceType.valueOf(it) }
+            val piece     = board.getPiece(from) ?: return
+            val isCastling  = piece.type == PieceType.KING && abs(to.col - from.col) == 2
+            val isEnPassant = piece.type == PieceType.PAWN &&
+                              abs(to.col - from.col) == 1 &&
+                              board.getPiece(to) == null
+            runOnUiThread { executeMove(from, to, promoteTo, isCastling, isEnPassant) }
+        } catch (_: Exception) { /* ignore malformed entries */ }
+    }
+
+    /**
+     * Pushes our move to Firestore so the opponent's listener picks it up.
+     * Pre-increments [lastSyncedMoveCount] so our own snapshot callback
+     * doesn't re-apply the move we just made.
+     */
+    private fun pushMoveToFirestore(moveStr: String) {
+        val code = roomCode ?: return
+        lastSyncedMoveCount++   // skip our own push in the listener
+        Firebase.firestore.collection("rooms").document(code)
+            .update("moves", FieldValue.arrayUnion(moveStr))
+            .addOnFailureListener { lastSyncedMoveCount-- }  // rollback on error
     }
 
     @Deprecated("Deprecated in Java")

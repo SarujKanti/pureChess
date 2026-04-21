@@ -112,25 +112,29 @@ class HomeActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
-        // vs Computer
+        // vs Computer — time dialog → color pick → launch
         findViewById<Button>(R.id.btnNewComputer).setOnClickListener {
-            showColorPickDialog()
+            showTimeControlDialog { minutes -> showColorPickDialog(minutes) }
         }
         findViewById<Button>(R.id.btnResumeComputer).setOnClickListener {
             launchGame(GameMode.COMPUTER, resume = true)
         }
 
-        // vs Friend
+        // vs Friend — time dialog → player names → launch
         findViewById<Button>(R.id.btnNewFriend).setOnClickListener {
-            showPlayerNamesDialog()
+            showTimeControlDialog { minutes -> showPlayerNamesDialog(minutes) }
         }
         findViewById<Button>(R.id.btnResumeFriend).setOnClickListener {
             launchGame(GameMode.FRIEND, resume = true)
         }
 
-        // Online
+        // Online — time dialog → online lobby
         findViewById<Button>(R.id.btnOnline).setOnClickListener {
-            startActivity(Intent(this, OnlineActivity::class.java))
+            showTimeControlDialog { minutes ->
+                val intent = Intent(this, OnlineActivity::class.java)
+                intent.putExtra(GameActivity.EXTRA_TIME_MINUTES, minutes)
+                startActivity(intent)
+            }
         }
     }
 
@@ -144,10 +148,30 @@ class HomeActivity : AppCompatActivity() {
     }
 
     // =========================================================================
+    // Time control dialog (shown before every new game)
+    // =========================================================================
+
+    private fun showTimeControlDialog(onSelected: (Int) -> Unit) {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_time_control)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.setCanceledOnTouchOutside(true)
+
+        fun pick(minutes: Int) { dialog.dismiss(); onSelected(minutes) }
+        dialog.findViewById<Button>(R.id.btn5min).setOnClickListener  { pick(5)  }
+        dialog.findViewById<Button>(R.id.btn10min).setOnClickListener { pick(10) }
+        dialog.findViewById<Button>(R.id.btn20min).setOnClickListener { pick(20) }
+        dialog.findViewById<Button>(R.id.btn30min).setOnClickListener { pick(30) }
+        dialog.findViewById<TextView>(R.id.btnNoTimer).setOnClickListener { pick(0) }
+        dialog.show()
+    }
+
+    // =========================================================================
     // Color-pick dialog (vs Computer)
     // =========================================================================
 
-    private fun showColorPickDialog() {
+    private fun showColorPickDialog(timeMinutes: Int) {
         val dialog = Dialog(this)
         dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.dialog_color_pick)
@@ -157,12 +181,14 @@ class HomeActivity : AppCompatActivity() {
         dialog.findViewById<LinearLayout>(R.id.optionWhite).setOnClickListener {
             dialog.dismiss()
             storage.clearGame(GameMode.COMPUTER)
-            launchGame(GameMode.COMPUTER, resume = false, playerIsWhite = true)
+            launchGame(GameMode.COMPUTER, resume = false, playerIsWhite = true,
+                timeMinutes = timeMinutes)
         }
         dialog.findViewById<LinearLayout>(R.id.optionBlack).setOnClickListener {
             dialog.dismiss()
             storage.clearGame(GameMode.COMPUTER)
-            launchGame(GameMode.COMPUTER, resume = false, playerIsWhite = false)
+            launchGame(GameMode.COMPUTER, resume = false, playerIsWhite = false,
+                timeMinutes = timeMinutes)
         }
         dialog.findViewById<TextView>(R.id.btnCancelColorPick).setOnClickListener {
             dialog.dismiss()
@@ -174,7 +200,7 @@ class HomeActivity : AppCompatActivity() {
     // Player-names dialog (vs Friend)
     // =========================================================================
 
-    private fun showPlayerNamesDialog() {
+    private fun showPlayerNamesDialog(timeMinutes: Int) {
         val dialog = Dialog(this)
         dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.dialog_player_names)
@@ -194,7 +220,8 @@ class HomeActivity : AppCompatActivity() {
                 resume        = false,
                 playerIsWhite = true,
                 p1Name        = p1,
-                p2Name        = p2
+                p2Name        = p2,
+                timeMinutes   = timeMinutes
             )
         }
         dialog.findViewById<TextView>(R.id.btnCancelNames).setOnClickListener {
@@ -212,7 +239,8 @@ class HomeActivity : AppCompatActivity() {
         resume: Boolean,
         playerIsWhite: Boolean = true,
         p1Name: String = "Player 1",
-        p2Name: String = "Player 2"
+        p2Name: String = "Player 2",
+        timeMinutes: Int = 0
     ) {
         val intent = Intent(this, GameActivity::class.java).apply {
             putExtra(GameActivity.EXTRA_MODE,         mode.name)
@@ -221,6 +249,7 @@ class HomeActivity : AppCompatActivity() {
             putExtra(GameActivity.EXTRA_PLAYER_WHITE, playerIsWhite)
             putExtra(GameActivity.EXTRA_P1_NAME,      p1Name)
             putExtra(GameActivity.EXTRA_P2_NAME,      p2Name)
+            putExtra(GameActivity.EXTRA_TIME_MINUTES, timeMinutes)
         }
         startActivity(intent)
     }
