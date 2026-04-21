@@ -169,6 +169,16 @@
             android:stateListAnimator="@null" />
     </LinearLayout>
 
+    <!-- Shared loading indicator (shown while Firestore calls are in-flight) -->
+    <ProgressBar
+        android:id="@+id/progressOnline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:indeterminateTint="@color/gold"
+        android:visibility="gone" />
+
     <!-- Firebase notice -->
     <TextView
         android:id="@+id/txtFirebaseNotice"
