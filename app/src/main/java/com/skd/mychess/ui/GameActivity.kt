@@ -1102,12 +1102,24 @@ class GameActivity : AppCompatActivity() {
     /**
      * Watches the room document's [moves] array. Any moves beyond
      * [lastSyncedMoveCount] are applied to the local board.
+     * Also watches the [playerLeft] flag — if the opponent sets it, we show
+     * a "Opponent left — You Win!" dialog.
      */
     private fun listenForOnlineMoves() {
         val code = roomCode ?: return
         onlineMoveListener = Firebase.firestore.collection("rooms").document(code)
             .addSnapshotListener { snap, err ->
                 if (err != null || snap == null || isAbandoned) return@addSnapshotListener
+
+                // ── Opponent-left detection ────────────────────────────
+                val playerLeft = snap.getBoolean("playerLeft") ?: false
+                if (playerLeft) {
+                    isAbandoned = true          // stop further processing
+                    runOnUiThread { showOpponentLeftDialog() }
+                    return@addSnapshotListener
+                }
+
+                // ── Normal move sync ────────────────────────────────────
                 val moves = snap.get("moves") as? List<*> ?: return@addSnapshotListener
                 if (moves.size > lastSyncedMoveCount) {
                     val newMoves = moves.drop(lastSyncedMoveCount)
@@ -1115,6 +1127,35 @@ class GameActivity : AppCompatActivity() {
                     for (m in newMoves) applyOnlineMove(m.toString())
                 }
             }
+    }
+
+    /** Shows a non-cancelable dialog when the opponent abandons the online game. */
+    private fun showOpponentLeftDialog() {
+        pauseTimer()
+        onlineMoveListener?.remove()
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Opponent Left")
+            .setMessage("Your opponent has left the game.\nYou win! 🏆")
+            .setCancelable(false)
+            .setPositiveButton("Exit") { _, _ -> finish() }
+            .show()
+    }
+
+    /**
+     * Marks this player as having left in Firestore so the opponent is notified,
+     * then finishes the activity.
+     */
+    private fun markPlayerLeft() {
+        val code = roomCode
+        isAbandoned = true
+        if (code != null) {
+            Firebase.firestore.collection("rooms").document(code)
+                .update("playerLeft", true)
+                .addOnCompleteListener { finish() }
+                .addOnFailureListener { finish() }   // exit even if update fails
+        } else {
+            finish()
+        }
     }
 
     /** Decodes and applies an opponent move received from Firestore. */
@@ -1149,6 +1190,16 @@ class GameActivity : AppCompatActivity() {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
+        if (mode == GameMode.ONLINE) {
+            // Online: leaving = forfeit; notify opponent via Firestore
+            AlertDialog.Builder(this)
+                .setTitle("Leave Game?")
+                .setMessage("Leaving now counts as a forfeit — your opponent wins.")
+                .setPositiveButton("Leave & Forfeit") { _, _ -> markPlayerLeft() }
+                .setNegativeButton("Stay", null)
+                .show()
+            return
+        }
         AlertDialog.Builder(this)
             .setTitle("Save & Exit")
             .setMessage("Save this game and return to the menu?")
