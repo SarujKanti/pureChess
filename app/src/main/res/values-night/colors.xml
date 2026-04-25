@@ -10,6 +10,7 @@
     <color name="text_secondary">#B0B8D0</color>
     <color name="text_muted">#606880</color>
 
+    <color name="divider">#1AFFFFFF</color>
     <color name="check_red">#E74C3C</color>
     <color name="win_green">#2ECC71</color>
 </resources>
