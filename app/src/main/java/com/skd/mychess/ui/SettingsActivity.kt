@@ -1,5 +1,6 @@
 package com.skd.mychess.ui
 
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
@@ -10,6 +11,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowInsetsControllerCompat
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.skd.mychess.R
 import com.skd.mychess.storage.SettingsManager
@@ -36,6 +38,12 @@ class SettingsActivity : AppCompatActivity() {
         settings = SettingsManager(this)
         settings.applyAppTheme()
         setContentView(R.layout.activity_settings)
+
+        // Match status bar icon style to current theme (dark icons on light bg)
+        val isNight = (resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        WindowInsetsControllerCompat(window, window.decorView)
+            .isAppearanceLightStatusBars = !isNight
 
         bindViews()
         populateBoardThemes()
@@ -112,19 +120,48 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun makeBoardSwatch(index: Int, name: String, light: Int, dark: Int): View {
         val selected = settings.boardTheme == index
+        val gold     = Color.parseColor("#D4AF37")
 
         val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity     = Gravity.CENTER
+            orientation  = LinearLayout.VERTICAL
+            gravity      = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             setPadding(dp(4), 0, dp(4), dp(8))
         }
 
-        // Mini chess-board preview (4 squares, 2×2)
-        val board = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(dp(44), dp(44))
+        // ── Outer FrameLayout carries the selection border ─────────────
+        // The board cells fill the inner area completely, so the stroke MUST
+        // live on a wrapper that sits outside the cells — not on the board itself.
+        val frame = FrameLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(52), dp(52))
+            background   = GradientDrawable().apply {
+                shape        = GradientDrawable.RECTANGLE
+                cornerRadius = dp(9).toFloat()
+                setColor(Color.TRANSPARENT)
+                if (selected)
+                    setStroke(dp(3), gold)
+                else
+                    setStroke(dp(1), Color.parseColor("#33D4AF37"))
+            }
+            // Inset so the board sits inside the border ring
+            setPadding(dp(4), dp(4), dp(4), dp(4))
         }
+
+        // ── Mini 2×2 chess-board preview ───────────────────────────────
+        val board = LinearLayout(this).apply {
+            orientation  = LinearLayout.VERTICAL
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT)
+            // Clip cells to rounded corners
+            background   = GradientDrawable().apply {
+                shape        = GradientDrawable.RECTANGLE
+                cornerRadius = dp(5).toFloat()
+                setColor(light)
+            }
+            clipToOutline = true
+        }
+
         val row1v = LinearLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f)
@@ -140,23 +177,17 @@ class SettingsActivity : AppCompatActivity() {
             }
             if (i < 2) row1v.addView(cell) else row2v.addView(cell)
         }
-        board.addView(row1v); board.addView(row2v)
+        board.addView(row1v)
+        board.addView(row2v)
+        frame.addView(board)
+        container.addView(frame)
 
-        // Outer ring for selection
-        val ring = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = dp(6).toFloat()
-            setStroke(dp(2), if (selected) Color.parseColor("#D4AF37") else Color.TRANSPARENT)
-        }
-        board.background = ring
-
-        container.addView(board)
-
+        // ── Label ──────────────────────────────────────────────────────
         val label = TextView(this).apply {
             text      = name
             textSize  = 10f
             gravity   = Gravity.CENTER
-            setTextColor(if (selected) Color.parseColor("#D4AF37") else Color.parseColor("#B0B8D0"))
+            setTextColor(if (selected) gold else Color.parseColor("#B0B8D0"))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT).also {
@@ -167,7 +198,7 @@ class SettingsActivity : AppCompatActivity() {
 
         container.setOnClickListener {
             settings.boardTheme = index
-            populateBoardThemes()   // refresh UI
+            populateBoardThemes()
         }
         return container
     }
@@ -239,30 +270,48 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun makeBgSwatch(index: Int, name: String, start: Int, end: Int): View {
         val selected = settings.homeBackground == index
+        val gold     = Color.parseColor("#D4AF37")
 
         val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity     = Gravity.CENTER
+            orientation  = LinearLayout.VERTICAL
+            gravity      = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             setPadding(dp(4), 0, dp(4), dp(8))
         }
 
+        // ── Outer frame carries the selection border ───────────────────
+        val frame = FrameLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(52), dp(52))
+            background   = GradientDrawable().apply {
+                shape        = GradientDrawable.RECTANGLE
+                cornerRadius = dp(11).toFloat()
+                setColor(Color.TRANSPARENT)
+                if (selected)
+                    setStroke(dp(3), gold)
+                else
+                    setStroke(dp(1), Color.parseColor("#33D4AF37"))
+            }
+            setPadding(dp(4), dp(4), dp(4), dp(4))
+        }
+
+        // ── Gradient preview ───────────────────────────────────────────
         val preview = View(this).apply {
-            layoutParams = LinearLayout.LayoutParams(dp(44), dp(44))
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT)
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR, intArrayOf(start, end)
-            ).apply {
-                cornerRadius = dp(8).toFloat()
-                if (selected) setStroke(dp(2), Color.parseColor("#D4AF37"))
-            }
+            ).apply { cornerRadius = dp(7).toFloat() }
         }
-        container.addView(preview)
+        frame.addView(preview)
+        container.addView(frame)
 
+        // ── Label ──────────────────────────────────────────────────────
         val label = TextView(this).apply {
             text      = name
             textSize  = 10f
             gravity   = Gravity.CENTER
-            setTextColor(if (selected) Color.parseColor("#D4AF37") else Color.parseColor("#B0B8D0"))
+            setTextColor(if (selected) gold else Color.parseColor("#B0B8D0"))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT).also {

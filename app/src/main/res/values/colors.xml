@@ -37,6 +37,9 @@
     <color name="turn_white">#F0D9B5</color>
     <color name="turn_black">#B58863</color>
 
+    <!-- Divider (subtle separator, readable on light bg) -->
+    <color name="divider">#1A000000</color>
+
     <!-- Status (same in both modes) -->
     <color name="check_red">#C0392B</color>
     <color name="win_green">#27AE60</color>
