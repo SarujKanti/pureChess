@@ -214,8 +214,14 @@ class SettingsActivity : AppCompatActivity() {
         val previews = listOf("♔ Classic", "♔ Warm", "♔ Ice")
         val tints    = listOf<Int?>(null, 0xFFFFAA44.toInt(), 0xFF44AAFF.toInt())
 
+        // Use theme-aware colors so cards are readable in both light and dark mode
+        val cardBg   = getColor(R.color.bg_card)
+        val cardBorder = getColor(R.color.bg_card_elevated)
+        val unselText = getColor(R.color.text_secondary)
+
         previews.forEachIndexed { index, label ->
             val selected = settings.pieceStyle == index
+            val gold = Color.parseColor("#D4AF37")
             val card = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity     = Gravity.CENTER
@@ -224,24 +230,27 @@ class SettingsActivity : AppCompatActivity() {
                 background  = GradientDrawable().apply {
                     shape         = GradientDrawable.RECTANGLE
                     cornerRadius  = dp(10).toFloat()
-                    setColor(Color.parseColor("#1E2538"))
-                    if (selected) setStroke(dp(2), Color.parseColor("#D4AF37"))
+                    setColor(cardBg)
+                    if (selected)
+                        setStroke(dp(2), gold)
+                    else
+                        setStroke(dp(1), cardBorder)
                 }
                 setPadding(dp(4), dp(8), dp(4), dp(8))
             }
 
+            val pieceColor = tints[index] ?: getColor(R.color.text_primary)
             val icon = TextView(this).apply {
                 text      = "♔"
                 textSize  = 24f
                 gravity   = Gravity.CENTER
-                tints[index]?.let { setTextColor(it) }
-                    ?: setTextColor(Color.WHITE)
+                setTextColor(pieceColor)
             }
             val txt = TextView(this).apply {
                 text      = label.split(" ")[1]
                 textSize  = 11f
                 gravity   = Gravity.CENTER
-                setTextColor(if (selected) Color.parseColor("#D4AF37") else Color.parseColor("#B0B8D0"))
+                setTextColor(if (selected) gold else unselText)
             }
             card.addView(icon); card.addView(txt)
             card.setOnClickListener {
