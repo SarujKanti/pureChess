@@ -128,13 +128,9 @@ class HomeActivity : AppCompatActivity() {
             launchGame(GameMode.FRIEND, resume = true)
         }
 
-        // Online — time dialog → online lobby
+        // Online — go straight to lobby; time is chosen by the room creator inside OnlineActivity
         findViewById<Button>(R.id.btnOnline).setOnClickListener {
-            showTimeControlDialog { minutes ->
-                val intent = Intent(this, OnlineActivity::class.java)
-                intent.putExtra(GameActivity.EXTRA_TIME_MINUTES, minutes)
-                startActivity(intent)
-            }
+            startActivity(Intent(this, OnlineActivity::class.java))
         }
     }
 
