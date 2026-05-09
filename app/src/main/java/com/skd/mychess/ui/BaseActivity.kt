@@ -17,6 +17,7 @@ open class BaseActivity<T : ViewDataBinding>(@LayoutRes private val layoutResId:
 
     open fun T.initialize() {}
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, layoutResId)
