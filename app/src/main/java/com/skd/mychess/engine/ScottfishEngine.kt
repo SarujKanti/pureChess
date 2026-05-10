@@ -85,7 +85,6 @@ class ScottfishEngine(private val board: ChessBoard) {
             return best
         }
     }
-
     
     // ── Apply / undo ─────────────────────────────────────────────────────────
 
