@@ -87,6 +87,7 @@ class ScottfishEngine(private val board: ChessBoard) {
     }
 
 
+    
     // ── Apply / undo ─────────────────────────────────────────────────────────
 
     /**
