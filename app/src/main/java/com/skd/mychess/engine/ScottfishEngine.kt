@@ -29,7 +29,7 @@ class ScottfishEngine(private val board: ChessBoard) {
         if (Random.nextDouble() < randomness) return moves.random()
         return moves.maxByOrNull { scoreMove(it, isWhite) } ?: moves.first()
     }
-
+    
 
     private fun minimaxMove(isWhite: Boolean, moves: List<Move>, depth: Int, randomness: Double): Move {
         if (Random.nextDouble() < randomness) return moves.random()
