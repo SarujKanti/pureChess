@@ -25,6 +25,7 @@ class ScottfishEngine(private val board: ChessBoard) {
         }
     }
 
+
     private fun bestGreedyMove(isWhite: Boolean, moves: List<Move>, randomness: Double): Move {
         if (Random.nextDouble() < randomness) return moves.random()
         return moves.maxByOrNull { scoreMove(it, isWhite) } ?: moves.first()
